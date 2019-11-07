@@ -1,0 +1,86 @@
+"REM WORKSPACETAB0","Stanje u mag 106.sql",,3
+SELECT PPROIZVOD.NAZIV(PROIZVOD), Z.* FROM ZALIHE Z
+WHERE ORG_DEO = 106
+  AND PROIZVOD IN (3181,399)
+"REM WORKSPACETAB1",Sva_dok_Amb_2009_GOD.sql,,15
+select D.ROWID, D.GODINA GOD, D.VRSTA_DOK VR, D.BROJ_DOK BRD, D.DATUM_DOK, D.DATUM_UNOSA,D.STATUS ST,tip_dok tip,pnacinfakt.naziv(d.tip_dok)naziv,
+       D.ORG_DEO MAG, PORGANIZACIONIDEO.NAZIV(D.ORG_DEO) NAZIV, D.BROJ_DOK1 BR1,
+       SD.PROIZVOD PRO, SD.KOLICINA KOL, SD.FAKTOR FAK, SD.CENA, SD.K_ROBE K_r, SD.REALIZOVANO REALZ, SD.RABAT RAB,SD.POREZ PDV,SD.CENA1
+       , OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, sd.faktor, sd.valuta,0) odgov
+from stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where sd.godina    (+)= d.godina and sd.vrsta_dok (+)= d.vrsta_dok and sd.broj_dok  (+)= d.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+ -----------------------------
+  and d.godina = 2009
+--  And D.Org_Deo = 2013
+--  and d.vrsta_dok  IN (3,5)
+AND PROIZVOD IN (399)
+ORDER BY D.DATUM_UNOSA,TO_NUMBER(PROIZVOD),TO_NUMBER(d.vrsta_dok),TO_NUMBER(d.BROJ_dok)
+
+"REM WORKSPACETAB2",Kartica_AMB_Cursor_stavke.sql,,26
+select sd.Proizvod,
+       D.Datum_Dok, D.Datum_Unosa,
+       D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+       D.Tip_Dok,
+       PPlanskiCenovnik.Cena(sd.Proizvod,
+                             D.Datum_Dok,'YUD',1) PCena,
+       K_Robe, ( Sum ( Kolicina * Faktor ) ) Kolicina
+
+from stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where sd.godina    (+)= d.godina and sd.vrsta_dok (+)= d.vrsta_dok and sd.broj_dok  (+)= d.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+ -----------------------------
+  AND D.Status > 0
+  And D.Datum_Dok Between TO_DATE('01.01.2009','DD.MM.YYYY') And SYSDATE
+  And D.Org_Deo = 2013
+  And SD.K_Robe != 0
+  -- And SD.Proizvod Like NVL( cProizvod, '%' )
+  Group By SD.Proizvod,
+           D.Datum_Dok, D.Datum_Unosa,
+           D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+           D.Tip_Dok, Cena, K_Robe
+  Order By SD.Proizvod,
+           D.Datum_Dok, D.Datum_Unosa,
+           D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+           D.Tip_Dok, Cena, K_Robe;
+"REM WORKSPACETAB3",Promet_AMB_Cursor_stavke.sql,,25
+
+select SD.Proizvod Sifra, P.Naziv,
+                ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+                ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+                ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje,
+                P.Jed_Mere JedMere
+from stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where sd.godina    (+)= d.godina and sd.vrsta_dok (+)= d.vrsta_dok and sd.broj_dok  (+)= d.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+ -----------------------------
+ -- bez tipova 13 i 14
+ and d.Tip_Dok In ( 15, 203, 204, 99, 301, 401, 402, 61, 60 ) 
+ and d.Org_Deo In (Select Magacin
+                          From Partner_magacin_Flag, Poslovni_Partner
+                          Where PPartner = 11)
+--                           And
+--                                Teren = nSifraTerena And PPartner Like '%') And
+  AND D.Status > 0
+  And D.Datum_Dok Between TO_DATE('01.01.2009','DD.MM.YYYY') And SYSDATE
+--  And D.Org_Deo = 2013
+  And SD.K_Robe != 0
+  -- And SD.Proizvod Like NVL( cProizvod, '%' )
+Group By SD.Proizvod, P.Naziv, P.Jed_Mere
+         Order By P.Naziv;
+"REM WORKSPACETAB4",Tipovi_dok_amb.sql,,4
+sELECT *
+FROM NACIN_FAKT
+-- u upitima se uzima bez 13 i 14
+WHERE TIP IN (13,14,15, 203, 204, 99, 301, 401, 402, 61, 60)
+"REM WORKSPACETAB5",Vrsta_dok.sql,,2
+SELECT * FROM VRSTA_DOK
+ORDER BY TO_NUMBER(VRSTA)
+"REM WORKSPACETAB6",Vezni_dok.sql,,4
+SELECT * FROM VEZNI_DOK
+WHERE GODINA = 2009
+  AND VRSTA_dOK = 3
+  AND BROJ_DOK  = '7'

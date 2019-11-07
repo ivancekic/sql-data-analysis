@@ -1,0 +1,1038 @@
+"REM WORKSPACETAB0","stanje zal",,43
+select sum(vrednost) vred
+from
+(
+         Select sd.Proizvod, Proizvod.posebna_grupa,
+                round(Sum(NVL(decode(d.tip_dok,14,Kolicina,realizovano)*Faktor
+                                * case when d.vrsta_dok = '90' then 0 else K_ROBE end
+                                ,0)),5) STANJE,
+                round(Sum(NVL(decode(d.tip_dok,14,Kolicina,realizovano)*Faktor*
+		                          (CASE WHEN d.VRSTA_DOK = '80' THEN (sd.CENA1-sd.CENA)
+		                                WHEN d.vrsta_dok  ='90' then ROUND((NVL(sd.cena,0)-NVL(sd.cena1,0)),2)
+		                                ELSE K_ROBE*( CASE WHEN d.VRSTA_DOK = 11 AND UPPER(ORGD.DODATNI_TIP) = 'VP2' THEN sd.CENA1 ELSE sd.CENA1 END )
+		                           END)
+		                      ,0)
+		                 )
+		             ,2) VREDNOST
+               , (select sum(kolicina*faktor)
+                   from dokument dx, stavka_dok stx
+                  where dx.vrsta_dok = stx.vrsta_dok and dx.broj_dok = stx.broj_dok and dx.godina = stx.godina
+                    and dx.vrsta_dok = 3 and dx.tip_dok   = 10 and dx.status in ('-8','-9') and dx.godina > 2008
+                    and stx.proizvod = sd.proizvod)
+                  u_kontroli
+               From Dokument d,
+                    (SELECT  BROJ_DOK,VRSTA_DOK,GODINA, STAVKA,PROIZVOD,LOT_SERIJA,ROK,KOLICINA,JED_MERE,CENA,VALUTA,LOKACIJA,PAKOVANJE,BROJ_KOLETA,K_REZ,K_ROBE,K_OCEK,KONTROLA,FAKTOR,REALIZOVANO,RABAT,POREZ,KOLICINA_KONTROLNA,AKCIZA,TAKSA,CENA1,Z_TROSKOVI
+                       FROM STAVKA_DOK
+                    ) sd,
+                    Proizvod,
+                    ORG_DEO_OSN_PODACI ORGD
+
+         Where d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina And
+               d.ORG_DEO = ORGD.ORG_DEO (+) AND
+               d.Status > 0 And
+               d.Datum_Dok Between to_date('01.01.2011','dd.mm.yyyy') And to_date('15.09.2011','dd.mm.yyyy') And
+--d.godina = 2010 and
+               (sd.K_Robe != 0 OR d.VRSTA_DOK = '80') And
+               d.Org_Deo = &nOrg And Proizvod.sifra=sd.proizvod
+               and proizvod.posebna_grupa <> 8
+--and (d.datum_dok != to_date('08.10.2010','dd.mm.yyyy') and d.vrsta_dok <> 13)
+--and (d.broj_dok,d.vrsta_dok,d.godina)
+--not in (select '1054','13',2010 from dual)
+--and d.datum_unosa < '08.10.2010 11:48:26'
+         Group By sd.Proizvod,Proizvod.tip_proizvoda,Proizvod.posebna_grupa,Proizvod.grupa_proizvoda,Proizvod.naziv
+)
+         Order By posebna_grupa,proizvod
+"REM WORKSPACETAB1","Kepu knjiga last.sql",,509
+Select
+
+--      DODATNI_TIP,BROJ_DOK,GOD_DOK,VRSTA_DOK,REDBRSTAVKE,DATUM,DATUM_DOK,DOKUMENT,NAZIV_PARTNERA,ZADUZENJE,RAZDUZENJE
+sum(ZADUZENJE) zad, sum(RAZDUZENJE) razd, sum(ZADUZENJE-RAZDUZENJE) stanje
+From
+(
+       select dodatni_tip,broj_dok,god_dok,vrsta_dok,
+               --------------------------------------------------------------------------------------------
+--               TRUNC((MOD(ROWNUM-1,&BrRedNaStranici)-ROWNUM)*(-1)/&BrRedNaStranici,0)+1 STRANICA,
+               --------------------------------------------------------------------------------------------
+               ROWNUM RedBrStavke,
+               --------------------------------------------------------------------------------------------
+               TO_CHAR(datum_dok,'DD.MM.YY') DATUM,
+               --------------------------------------------------------------------------------------------
+               datum_dok,
+               --------------------------------------------------------------------------------------------
+               NVL(
+               CASE WHEN zaduzenje<>0 and tip_dok in (10) and vrsta_dok not in ('4')  THEN
+                       (
+                        select 'KVPC:'||DX.ORG_DEO||'-'||DX.BROJ_DOK1||'/'||SUBSTR(DX.GODINA,3,2)
+                          from vezni_dok VDX, DOKUMENT DX
+                         where VDX.ZA_VRSTA_DOK = DX.VRSTA_DOK
+                           AND VDX.ZA_BROJ_DOK  = DX.BROJ_DOK
+                           AND VDX.ZA_GODINA    = DX.GODINA
+                           AND VDX.vrsta_dok = vr_dok
+                           and VDX.broj_dok  = br_dok
+                           and VDX.godina    = GOD_DOK
+                          and za_vrsta_dok = '85'
+
+                       )
+                    WHEN zaduzenje <> 0 and vrsta_dok in ('73') THEN
+                           'KVPC:'||dokument
+                    WHEN vrsta_dok = '13' THEN
+                       'POVR:'||dokument
+                    WHEN vrsta_dok = '4' THEN
+                       'STPR:'||dokument
+                    ELSE
+                       dokument
+               END,'-') dokument,
+               --------------------------------------------------------------------------------------------
+               naziv_partnera||po_dokumentu naziv_partnera,
+               --------------------------------------------------------------------------------------------
+               case when NVL(zaduzenje,0) + NVL(rabat,0) <> 0 then
+--                         nvl(zaduzenje,0) + nvl(rabat,0)
+--                         nvl(zaduzenje,0) + nvl(rabat,0) + nvl(PDV_NA_ZADUZENJE,0)
+                         nvl(zaduzenje,0) + nvl(PDV_NA_ZADUZENJE,0)
+--                         (nvl(zaduzenje,0) + nvl(rabat,0)) * 1.18
+--                         PDV_NA_RABAT
+
+                    else
+                       0
+               end zaduzenje,
+               --------------------------------------------------------------------------------------------
+               case when NVL(razduzenje,0) <> 0 then
+-- deja pdv
+--                       nvl(razduzenje,0)+nvl(rabat,0)
+                       nvl(razduzenje,0) + nvl(rabat,0) + nvl(PDV_RAZDUZENJE,0)
+-- deja pdv
+                    else
+                       0
+               end razduzenje
+               --------------------------------------------------------------------------------------------
+          from (
+
+        select
+               org_podaci.dodatni_tip,
+               d.org_deo,
+               d.vrsta_dok,vd.naziv vd_naziv,
+               d.tip_dok, nf.naziv tip_naziv,
+               d.broj_dok,d.broj_dok1,d.godina,
+               D.GODINA GOD_DOK,
+               D.BROJ_DOK BR_DOK,
+               D.VRSTA_DOK VR_DOK,
+               d.datum_dok,d.datum_unosa,
+               to_char(d.datum_dok,'dd.mm.yyyy') datum,
+               D.ORG_DEO||'-'||d.broj_dok1||'/'||substr(d.godina,3,4) dokument,
+               case when d.vrsta_dok = (11) and d.tip_dok in (23,238) then
+                         'Int.Otprema'
+                    when d.vrsta_dok = (3) and d.tip_dok in (115) then
+                         'Int.Prijem'
+                    when d.vrsta_dok in (70) then
+                         'Medjuskl.Izl'
+                    when d.vrsta_dok in (71) then
+                         'Medjuskl.Ul'
+                    when d.vrsta_dok = (12) and d.tip_dok = 23 then
+                         'STORNO INT.OTPR.'
+                    when d.vrsta_dok in (21) then
+                         'POCETNO STANJE'
+                    when d.vrsta_dok in (90) then
+                         'NIVEL.'
+                    when d.vrsta_dok not in (80) then
+                         SUBSTR(pp.naziv,1,19)
+                    else
+                         'NIVELACIJA'
+               end naziv_partnera,
+               CASE WHEN D.VRSTA_DOK = 3 AND D.TIP_DOK = 10 THEN
+                         (select ' (OTPR: '||TRIM(za_broj_dok)||')' from vezni_dok where vrsta_dok = d.vrsta_dok and broj_dok = d.broj_dok and godina = d.godina and za_vrsta_dok = '24')
+                    WHEN D.VRSTA_DOK = 73 THEN
+                         (select ' ('||TRIM(za_broj_dok)||'/'||za_godina||')' from vezni_dok where vrsta_dok = d.vrsta_dok and broj_dok = d.broj_dok and godina = d.godina and za_vrsta_dok = '24')
+                    WHEN D.VRSTA_DOK = 90 THEN
+                         (select '(UZROK:'
+                                   ||
+                                   case when dp.vrsta_dok = 13 then
+                                            'POVR.'
+                                        WHEN DP.VRSTA_dok = 12 then
+                                            'STOR.'
+                                        ELSE
+                                             ' '
+                                   END
+                                   ||dp.org_deo||'-'||dp.broj_dok1||'/'||SUBSTR(za_godina,3,2)||')'
+                            from vezni_dok VDP, DOKUMENT DP
+
+                           where VDP.vrsta_dok    = d.vrsta_dok
+                             and VDP.broj_dok     = d.broj_dok
+                             and VDP.godina       = d.godina
+                             AND VDP.ZA_vrsta_dok = dp.vrsta_dok
+                             and vdp.za_godina    = dp.godina
+                             and vdp.za_broj_dok  = dp.broj_dok)
+                    WHEN D.VRSTA_DOK = 13 THEN
+                         (
+                            select
+                                   '(RN-OT:'||DX.ORG_DEO||'-'||DX.BROJ_DOK1||'/'||SUBSTR(DX.GODINA,3,2)||')'
+                              from vezni_dok VDX, DOKUMENT DX
+                             where VDX.ZA_VRSTA_DOK = DX.VRSTA_DOK
+                               AND VDX.ZA_BROJ_DOK  = DX.BROJ_DOK
+                               AND VDX.ZA_GODINA    = DX.GODINA
+                               AND VDX.vrsta_dok    = d.vrsta_dok
+                               and VDX.broj_dok     = d.broj_dok
+                               and VDX.godina       = d.godina
+                              and za_vrsta_dok = '11'
+                         )
+                    ELSE
+
+                    NULL
+               END
+               po_dokumentu,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*ST.K_ROBE*st.cena1 *
+                                 PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'D',d.datum_dok),0)
+                                 ,2),0)*
+		                   (case when UPPER(ORG_PODACI.dodatni_tip) = 'VP' AND D.VRSTA_DOK= '90' THEN 0	ELSE 1 END)
+
+                            +
+                    		case when d.vrsta_dok in (80) then ROUND(st.kolicina*(NVL(st.cena1,0)-NVL(st.cena,0)),2)
+		                         WHEN d.vrsta_dok in (90) then
+        		                      case when UPPER(ORG_PODACI.dodatni_tip) = 'VP' AND D.VRSTA_DOK='90' THEN
+
+--                	                        nvl(  (select (case when vd3.za_vrsta_dok is null then -1 else 1 end)
+--                	                               from vezni_dok vd3
+--                	                               where vd3.vrsta_dok = d.vrsta_dok and vd3.godina = d.godina and vd3.broj_dok = d.broj_dok and vd3.za_vrsta_dok in(11)
+--                	                              )
+--                	                           ,-1)
+
+
+                	                        nvl(  (
+                	                               select (case when vd3.za_vrsta_dok is null or vd3.za_vrsta_dok in (12,13) then
+                	                                                 -1
+                	                                       		when vd3.za_vrsta_dok in (11,31) then
+                	                                       			1
+                	                               		   else 1
+                	                               		   end
+                	                               		   )
+                	                               from vezni_dok vd3
+                	                               where vd3.vrsta_dok = d.vrsta_dok and vd3.godina = d.godina and vd3.broj_dok = d.broj_dok and vd3.za_vrsta_dok in(11,12,13,31)
+                	                              )
+                	                           ,-1)
+
+
+	                                  ELSE
+                                     		1
+	                     		      END
+    		                        	 *
+            	               		  ROUND(st.kolicina*(
+                                             (Case When st.valuta <> 'YUD' Then
+					                        	 (
+                                                    Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then ( Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then round(nvl(st.cena,0) * Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4) Else round(nvl(st.cena,0) * Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'), Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner)) End)
+                                                         When D.Vrsta_Dok != '73' Then round(nvl(st.cena,0) * Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                    End
+						                     	 )
+						                      Else
+                                                  st.cena
+						                      End
+                                             )
+			                                 -
+            	                             NVL(st.cena1,0))
+            	                           ,2)
+                		    else
+                           		0
+		                    end
+                   )                                                                                                                     ZADUZENJE,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                    (Case When st.valuta <> 'YUD' Then
+                         (
+                           Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                               (
+                                 Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                           round(nvl(st.cena,0) *
+                                           Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                      Else
+                                           round(nvl(st.cena,0) *
+                                           Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                           Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                      End
+                               )
+                           When D.Vrsta_Dok != '73' Then
+                                round(nvl(st.cena,0) *
+                                Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                           End
+                         )
+                     Else
+                         st.cena
+                     End
+                    )
+                   *st.rabat/100
+                   *PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)*(-1),0),2) ,0 ))                            RABAT,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                    (Case When st.valuta <> 'YUD' Then
+                         (
+                           Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                               (
+                                 Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                           round(nvl(st.cena,0) *
+                                           Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                      Else
+                                           round(nvl(st.cena,0) *
+                                           Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                           Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                      End
+                               )
+                           When D.Vrsta_Dok != '73' Then
+                                round(nvl(st.cena,0) *
+                                Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                           End
+                         )
+                     Else
+                         st.cena
+                     End
+                    )
+                             * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)
+                            ,0)
+                   ,2),0)
+                   )                                                                                                                     RAZDUZENJE,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum( --ROUND(
+                    CASE WHEN &nPrikaziPDV = 0 Then
+                              0
+                    ELSE
+                        (
+                         NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                                       (Case When st.valuta <> 'YUD' Then
+                                            (Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                                                  (
+                                                    Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                                              round(nvl(st.cena,0) *
+                                                              Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                    Else
+                                                              round(nvl(st.cena,0) *
+                                                              Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                                              Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                                    End
+                                                  )
+                                              When D.Vrsta_Dok != '73' Then
+                                                   round(nvl(st.cena,0) *
+                                                   Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                              End
+                                            )
+                                        Else
+                                            st.cena
+                                        End
+                                       )
+                                       * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)
+                                      ,0)
+                                  ,2)
+                             ,0)
+                             --- RAZDUZENJE KRAJ
+                       +
+                         NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                                       (Case When st.valuta <> 'YUD' Then
+                                            (Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                                                  (
+                                                    Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                                              round(nvl(st.cena,0) *
+                                                              Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                    Else
+                                                              round(nvl(st.cena,0) *
+                                                              Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                                              Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                                    End
+                                                  )
+                                              When D.Vrsta_Dok != '73' Then
+                                                   round(nvl(st.cena,0) *
+                                                   Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                              End
+                                            )
+                                        Else
+                                            st.cena
+                                        End
+                                       )
+                                      * st.rabat/100
+                                      * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)*(-1)
+                                      ,0)
+                                   ,2)
+                             ,0 )
+                             --- RABAT KRAJ
+                         )
+                       *
+                                 -- posebno obradjeno kad nije unipasan pdv na stavkama
+                                 -- po novom treba prikazti pdv za svaku vrstu dokumenta
+                                 nvl(st.porez,PPorez.ProcenatPoreza( d.Poslovnica,St.Proizvod, D.Datum_Dok, '3' )) / 100
+                    END
+                    --,2)
+                   )                                                                                                                     PDV_RAZDUZENJE,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               CASE WHEN &nPrikaziPDV = 1 then
+                      sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*ST.K_ROBE*st.cena1 *
+                                           PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'D',d.datum_dok)
+                                       ,0)
+                                       * nvl(st.porez,PPorez.ProcenatPoreza( d.Poslovnica,St.Proizvod, D.Datum_Dok, '3' )) / 100
+                                   ,2)
+                              ,0)
+                      *
+                      (case when UPPER(ORG_PODACI.dodatni_tip) = 'VP' AND D.VRSTA_DOK='90' THEN
+                                 0
+                       ELSE
+                                 1
+                       END)
+                      +
+                       case when d.vrsta_dok in (80) then
+                                 ROUND(st.kolicina*(NVL(st.cena1,0)-NVL(st.cena,0)),2)
+                                 * nvl(st.porez,PPorez.ProcenatPoreza( d.Poslovnica,St.Proizvod, D.Datum_Dok, '3' )) / 100
+                            WHEN d.vrsta_dok in (90) then
+                                 case when UPPER(ORG_PODACI.dodatni_tip) = 'VP' AND D.VRSTA_DOK='90' THEN
+                                           nvl( (select case when vd3.za_vrsta_dok is null then -1 else 1 end
+                     						     from vezni_dok vd3
+										         where vd3.vrsta_dok = d.vrsta_dok
+ 										           and vd3.godina    = d.godina
+										           and vd3.broj_dok  = d.broj_dok
+										           and vd3.za_vrsta_dok = 11)
+										       , -1)
+                                 else
+                                        1
+                                 end
+                                *
+                                 ROUND(st.kolicina *
+                                        (
+                                          (Case When st.valuta <> 'YUD' Then
+                                                (Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                                                        (Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                                                    round(nvl(st.cena,0) *
+                                                                    Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                         Else
+                                                                    round(nvl(st.cena,0) *
+                                                                    Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                                                    Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                                         End
+                                                        )
+                                                      When D.Vrsta_Dok != '73' Then
+                                                           round(nvl(st.cena,0) *
+                                                           Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                      End
+                                                )
+                                           Else
+                                               st.cena
+                                           End
+                                         )
+                                        -
+                                          NVL(st.cena1,0)
+                                        )
+                                        * nvl(st.porez,PPorez.ProcenatPoreza( d.Poslovnica,St.Proizvod, D.Datum_Dok, '3' )) / 100
+                                      ,2)
+                       else
+                           0
+                       end
+                       )
+---------------------- rabat
+                     +
+                      sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                                        (Case When st.valuta <> 'YUD' Then
+                                             (Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                                                   (Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                                              round(nvl(st.cena,0) *
+                                                              Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                    Else
+                                                              round(nvl(st.cena,0) *
+                                                              Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                                              Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                                    End
+                                                   )
+                                                   When D.Vrsta_Dok != '73' Then
+                                                        round(nvl(st.cena,0) *
+                                                        Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                   End
+                                             )
+                                         Else
+                                             st.cena
+                                         End
+                                        )
+                                       * st.rabat/100
+                                       * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)*(-1)
+                                       * nvl(st.porez,PPorez.ProcenatPoreza( d.Poslovnica,St.Proizvod, D.Datum_Dok, '3' )) / 100
+                                       ,0)
+                                    ,2)
+                              ,0 )
+                         )
+                     +
+                      sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                                        (Case When st.valuta <> 'YUD' Then
+                                            (Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                                                  (Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                                             round(nvl(st.cena,0) *
+                                                             Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                   Else
+                                                             round(nvl(st.cena,0) *
+                                                             Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                                             Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                                   End
+                                                  )
+                                                  When D.Vrsta_Dok != '73' Then
+                                                       round(nvl(st.cena,0) *
+                                                       Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                              End
+                                            )
+                                         Else
+                                             st.cena
+                                         End
+                                        )
+                                      * st.rabat/100
+                                      * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)*(-1)
+                                       ,0)
+                                   ,2)
+                              ,0)
+                  )
+ -- prikaz bez pdv
+               ELSE
+                      sum(NVL(round(nvl(sign(ST.K_ROBE)*ST.KOLICINA*ST.FAKTOR*DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE)*
+                                        (Case When st.valuta <> 'YUD' Then
+                                            (Case When (upper(VratiTipIzvoza(d.org_deo)) = 'DA' or d.org_deo = 200) And D.Vrsta_Dok = 73 Then
+                                                  (Case When Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner) = -2 Then
+                                                             round(nvl(st.cena,0) *
+                                                             Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                                   Else
+                                                             round(nvl(st.cena,0) *
+                                                             Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),
+                                                             Pmapiranje.BrojDecimalaNaseFirme(PMapiranje.VLASNIK_CONN_STR,D.vrsta_dok,D.PPartner))
+                                                   End
+                                                  )
+                                                  When D.Vrsta_Dok != '73' Then
+                                                       round(nvl(st.cena,0) *
+                                                       Pkurs.KursNaDan(valuta, d.Datum_dok, 'S'),4)
+                                             End
+                                            )
+                                         Else
+                                             st.cena
+                                         End
+                                        )
+                                      * st.rabat/100
+                                      * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)*(-1)
+                                      ,0)
+                                   ,2)
+                             ,0 )
+                         )
+               END                                                                                                                        PDV_NA_ZADUZENJE
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+          from dokument d,(SELECT  BROJ_DOK,VRSTA_DOK,GODINA,STAVKA,
+                                   PROIZVOD,LOT_SERIJA,ROK,KOLICINA,JED_MERE,CENA,VALUTA,
+                                   LOKACIJA,PAKOVANJE,BROJ_KOLETA,K_REZ,K_ROBE,K_OCEK,KONTROLA,FAKTOR,REALIZOVANO,RABAT,POREZ,KOLICINA_KONTROLNA,AKCIZA,TAKSA,
+                                   CENA1,Z_TROSKOVI
+                             FROM STAVKA_DOK
+
+                            UNION ALL
+
+                            SELECT VDP.ZA_BROJ_DOK,VDP.ZA_VRSTA_DOK,VDP.ZA_GODINA,STAVKA,
+                                   PROIZVOD,LOT_SERIJA,ROK,KOLICINA,JED_MERE,CENA,
+                                   VALUTA,LOKACIJA,PAKOVANJE,BROJ_KOLETA,K_REZ,K_ROBE,K_OCEK,KONTROLA,FAKTOR,REALIZOVANO,RABAT,POREZ,KOLICINA_KONTROLNA,AKCIZA,TAKSA,CENA1,Z_TROSKOVI
+                              FROM STAVKA_DOK STP, VEZNI_DOK VDP
+                             WHERE VDP.VRSTA_DOK = STP.VRSTA_DOK
+                               AND VDP.GODINA    = STP.GODINA
+                               AND VDP.BROJ_DOK  = STP.BROJ_DOK
+                               AND VDP.ZA_VRSTA_DOK = '90'
+                               AND STP.CENA<>STP.CENA1) ST
+                         , proizvod p, poslovni_partner pp, organizacioni_deo orgd, vrsta_dok vd, nacin_fakt nf, org_deo_osn_podaci org_podaci
+         where d.vrsta_dok = st.vrsta_dok
+           and d.godina    = st.godina
+           and d.broj_dok  = st.broj_dok
+           and d.vrsta_dok = vd.vrsta
+           and d.tip_dok   = nf.tip
+           and st.proizvod = p.sifra
+           and d.ppartner  = pp.sifra (+)
+           and d.org_deo   = orgd.id
+           and d.vrsta_dok not in (2,9,10,61,62)
+           and orgd.id     = org_podaci.org_deo
+           and p.tip_proizvoda not in (8)
+           and d.org_deo   like &nOrg
+           and d.datum_dok between  to_date(&datOd,'dd.mm.yyyy') and to_date(&datDo,'dd.mm.yyyy') --dDatumDo --to_date('31.12.'||to_char(dDatumOd,'yyyy'),'dd.mm.yyyy')
+           AND D.STATUS > 0
+--and d.datum_unosa < '08.10.2010 11:48:26'
+        group by  d.org_deo,org_podaci.dodatni_tip,
+                  d.vrsta_dok,vd.naziv ,
+                  d.tip_dok, nf.naziv ,
+                  d.broj_dok,d.broj_dok1,d.godina,
+                  d.datum_dok,d.datum_unosa,
+                  to_char(d.datum_dok,'dd.mm.yyyy') ,
+                  d.org_deo||'-'||d.broj_dok1||'/'||d.godina ,
+                  pp.naziv
+)
+        order by org_deo, datum_dok, datum_unosa
+)
+"REM WORKSPACETAB2","Kepu knjiga Last okraceno",,181
+Select
+
+--      DODATNI_TIP,BROJ_DOK,GOD_DOK,VRSTA_DOK,REDBRSTAVKE,DATUM,DATUM_DOK,DOKUMENT,NAZIV_PARTNERA,ZADUZENJE,RAZDUZENJE
+sum(ZADUZENJE) zad, sum(RAZDUZENJE) razd, sum(ZADUZENJE-RAZDUZENJE) stanje
+From
+(
+       select dodatni_tip,broj_dok,god_dok,vrsta_dok,
+               --------------------------------------------------------------------------------------------
+               TO_CHAR(datum_dok,'DD.MM.YY') DATUM,
+               --------------------------------------------------------------------------------------------
+               datum_dok,
+               --------------------------------------------------------------------------------------------
+               NVL(
+               CASE WHEN zaduzenje<>0 and tip_dok in (10) and vrsta_dok not in ('4')  THEN
+                       (
+                        select 'KVPC:'||DX.ORG_DEO||'-'||DX.BROJ_DOK1||'/'||SUBSTR(DX.GODINA,3,2)
+                          from vezni_dok VDX, DOKUMENT DX
+                         where VDX.ZA_VRSTA_DOK = DX.VRSTA_DOK AND VDX.ZA_BROJ_DOK  = DX.BROJ_DOK AND VDX.ZA_GODINA    = DX.GODINA
+                           AND VDX.vrsta_dok = vr_dok and VDX.broj_dok  = br_dok and VDX.godina    = GOD_DOK and za_vrsta_dok = '85'
+                       )
+                    WHEN zaduzenje <> 0 and vrsta_dok in ('73') THEN 'KVPC:'||dokument
+                    WHEN vrsta_dok = '13' THEN 'POVR:'||dokument
+                    WHEN vrsta_dok = '4' THEN'STPR:'||dokument
+                    ELSE dokument
+               END,'-') dokument,
+               --------------------------------------------------------------------------------------------
+               naziv_partnera||po_dokumentu naziv_partnera,
+               --------------------------------------------------------------------------------------------
+               case when NVL(zaduzenje,0) + NVL(rabat,0) <> 0 then nvl(zaduzenje,0) + nvl(PDV_NA_ZADUZENJE,0) else 0 end zaduzenje,
+               --------------------------------------------------------------------------------------------
+               case when NVL(razduzenje,0) <> 0 then nvl(razduzenje,0) + nvl(rabat,0) + nvl(PDV_RAZDUZENJE,0) else 0 end razduzenje
+               --------------------------------------------------------------------------------------------
+          from (
+
+        select
+               org_podaci.dodatni_tip,d.org_deo,d.vrsta_dok,vd.naziv vd_naziv,d.tip_dok, nf.naziv tip_naziv,d.broj_dok,d.broj_dok1,d.godina, D.GODINA GOD_DOK,D.BROJ_DOK BR_DOK,D.VRSTA_DOK VR_DOK, d.datum_dok,d.datum_unosa,
+               to_char(d.datum_dok,'dd.mm.yyyy') datum,D.ORG_DEO||'-'||d.broj_dok1||'/'||substr(d.godina,3,4) dokument,
+               case when d.vrsta_dok = (11) and d.tip_dok in (23,238) then
+                         'Int.Otprema'
+                    when d.vrsta_dok = (3) and d.tip_dok in (115) then
+                         'Int.Prijem'
+                    when d.vrsta_dok in (70) then
+                         'Medjuskl.Izl'
+                    when d.vrsta_dok in (71) then
+                         'Medjuskl.Ul'
+                    when d.vrsta_dok = (12) and d.tip_dok = 23 then
+                         'STORNO INT.OTPR.'
+                    when d.vrsta_dok in (21) then
+                         'POCETNO STANJE'
+                    when d.vrsta_dok in (90) then
+                         'NIVEL.'
+                    when d.vrsta_dok not in (80) then
+                         SUBSTR(pp.naziv,1,19)
+                    else
+                         'NIVELACIJA'
+               end naziv_partnera,
+               CASE WHEN D.VRSTA_DOK = 3 AND D.TIP_DOK = 10 THEN
+                         (select ' (OTPR: '||TRIM(za_broj_dok)||')' from vezni_dok where vrsta_dok = d.vrsta_dok and broj_dok = d.broj_dok and godina = d.godina and za_vrsta_dok = '24')
+                    WHEN D.VRSTA_DOK = 73 THEN
+                         (select ' ('||TRIM(za_broj_dok)||'/'||za_godina||')' from vezni_dok where vrsta_dok = d.vrsta_dok and broj_dok = d.broj_dok and godina = d.godina and za_vrsta_dok = '24')
+                    WHEN D.VRSTA_DOK = 90 THEN
+                         (select '(UZROK:'
+                                   ||
+                                   case when dp.vrsta_dok = 13 then
+                                            'POVR.'
+                                        WHEN DP.VRSTA_dok = 12 then
+                                            'STOR.'
+                                        ELSE
+                                             ' '
+                                   END
+                                   ||dp.org_deo||'-'||dp.broj_dok1||'/'||SUBSTR(za_godina,3,2)||')'
+                            from vezni_dok VDP, DOKUMENT DP
+
+                           where VDP.vrsta_dok    = d.vrsta_dok
+                             and VDP.broj_dok     = d.broj_dok
+                             and VDP.godina       = d.godina
+                             AND VDP.ZA_vrsta_dok = dp.vrsta_dok
+                             and vdp.za_godina    = dp.godina
+                             and vdp.za_broj_dok  = dp.broj_dok)
+                    WHEN D.VRSTA_DOK = 13 THEN
+                         (
+                            select
+                                   '(RN-OT:'||DX.ORG_DEO||'-'||DX.BROJ_DOK1||'/'||SUBSTR(DX.GODINA,3,2)||')'
+                              from vezni_dok VDX, DOKUMENT DX
+                             where VDX.ZA_VRSTA_DOK = DX.VRSTA_DOK
+                               AND VDX.ZA_BROJ_DOK  = DX.BROJ_DOK
+                               AND VDX.ZA_GODINA    = DX.GODINA
+                               AND VDX.vrsta_dok    = d.vrsta_dok
+                               and VDX.broj_dok     = d.broj_dok
+                               and VDX.godina       = d.godina
+                              and za_vrsta_dok = '11'
+                         )
+                    ELSE
+
+                    NULL
+               END
+               po_dokumentu,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE) * ST.KOLICINA * ST.FAKTOR * ST.K_ROBE * st.cena1 *
+                                 PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'D',d.datum_dok),0)
+                                 ,2),0)*
+		                   (case when UPPER(ORG_PODACI.dodatni_tip) = 'VP' AND D.VRSTA_DOK= '90' THEN 0	ELSE 1 END)
+                            +
+                    		case when d.vrsta_dok in (80) then ROUND(st.kolicina*(NVL(st.cena1,0)-NVL(st.cena,0)),2)
+		                         WHEN d.vrsta_dok in (90) then
+        		                      case when UPPER(ORG_PODACI.dodatni_tip) = 'VP' AND D.VRSTA_DOK='90' THEN
+                	                        nvl(  (
+                	                               select (case when vd3.za_vrsta_dok is null or vd3.za_vrsta_dok in (13) then -1
+                	                                       		when vd3.za_vrsta_dok in (11,12,31) then 1
+                	                               		   else 1
+                	                               		   end
+                	                               		   )
+                	                               from vezni_dok vd3
+                	                               where vd3.vrsta_dok = d.vrsta_dok and vd3.godina = d.godina and vd3.broj_dok = d.broj_dok and vd3.za_vrsta_dok in(11,12,13,31)
+--                	                               where vd3.vrsta_dok = d.vrsta_dok and vd3.godina = d.godina and vd3.broj_dok = d.broj_dok and vd3.za_vrsta_dok in(11)
+                	                              )
+                	                           ,-1)
+	                                  ELSE 1
+	                     		      END
+    		                        	 *
+            	               		  ROUND(st.kolicina * (st.cena - NVL(st.cena1,0))
+            	                           ,2)
+--*
+--												(
+--													select (case when vd3.za_vrsta_dok is null or vd3.za_vrsta_dok in (12,13) then -1
+--																 when vd3.za_vrsta_dok in (11,31) then 1
+--															else 1 end
+--															)
+--                	                               	from vezni_dok vd3
+--                	                               	where vd3.vrsta_dok = d.vrsta_dok and vd3.godina = d.godina and vd3.broj_dok = d.broj_dok and vd3.za_vrsta_dok in(11,12,13,31)
+--												)
+                		    else
+                           		0
+		                    end
+                   )                                                                                                                     			ZADUZENJE,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE) * ST.KOLICINA * ST.FAKTOR * DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE) * st.cena * st.rabat/100
+                   	* PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok)*(-1),0),2) ,0 ))                            			RABAT,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE) * ST.KOLICINA * ST.FAKTOR * DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE) * st.cena
+                    * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok) ,0),2),0))											RAZDUZENJE,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               0																																	PDV_RAZDUZENJE,
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+               sum(NVL(round(nvl(sign(ST.K_ROBE) * ST.KOLICINA * ST.FAKTOR * DECODE(ST.VRSTA_DOK,'90',0,ST.K_ROBE) * st.cena * st.rabat/100
+                       * PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'P',d.datum_dok) * (-1),0),2),0 )) 								PDV_NA_ZADUZENJE
+               ----------------------------------------------------------------------------------------------------------------------------------------------
+          from dokument d,(SELECT  BROJ_DOK,VRSTA_DOK,GODINA,STAVKA,
+                                   PROIZVOD,LOT_SERIJA,ROK,KOLICINA,JED_MERE,CENA,VALUTA,
+                                   LOKACIJA,PAKOVANJE,BROJ_KOLETA,K_REZ,K_ROBE,K_OCEK,KONTROLA,FAKTOR,REALIZOVANO,RABAT,POREZ,KOLICINA_KONTROLNA,AKCIZA,TAKSA,
+                                   CENA1,Z_TROSKOVI
+                             FROM STAVKA_DOK
+
+                            UNION ALL
+
+                            SELECT VDP.ZA_BROJ_DOK,VDP.ZA_VRSTA_DOK,VDP.ZA_GODINA,STAVKA,
+                                   PROIZVOD,LOT_SERIJA,ROK,KOLICINA,JED_MERE,CENA,
+                                   VALUTA,LOKACIJA,PAKOVANJE,BROJ_KOLETA,K_REZ,K_ROBE,K_OCEK,KONTROLA,FAKTOR,REALIZOVANO,RABAT,POREZ,KOLICINA_KONTROLNA,AKCIZA,TAKSA,CENA1,Z_TROSKOVI
+                              FROM STAVKA_DOK STP, VEZNI_DOK VDP
+                             WHERE VDP.VRSTA_DOK = STP.VRSTA_DOK AND VDP.GODINA    = STP.GODINA AND VDP.BROJ_DOK  = STP.BROJ_DOK AND VDP.ZA_VRSTA_DOK = '90'
+                               AND STP.CENA<>round(STP.CENA1,4)) ST
+                         , proizvod p, poslovni_partner pp, organizacioni_deo orgd, vrsta_dok vd, nacin_fakt nf, org_deo_osn_podaci org_podaci
+         where d.vrsta_dok = st.vrsta_dok and d.godina    = st.godina and d.broj_dok  = st.broj_dok
+           and d.vrsta_dok = vd.vrsta and d.tip_dok   = nf.tip and st.proizvod = p.sifra and d.ppartner  = pp.sifra (+) and d.org_deo   = orgd.id
+           and d.vrsta_dok not in (2,9,10,61,62) and orgd.id     = org_podaci.org_deo and p.tip_proizvoda not in (8)
+           and d.org_deo = &nOrg
+           AND D.STATUS > 0
+		   and d.Datum_Dok Between to_date(&datOd,'dd.mm.yyyy') And to_date(&datDo,'dd.mm.yyyy')
+           and d.godina = &nGod
+
+        group by  d.org_deo,org_podaci.dodatni_tip,
+                  d.vrsta_dok,vd.naziv ,
+                  d.tip_dok, nf.naziv ,
+                  d.broj_dok,d.broj_dok1,d.godina,
+                  d.datum_dok,d.datum_unosa,
+                  to_char(d.datum_dok,'dd.mm.yyyy') ,
+                  d.org_deo||'-'||d.broj_dok1||'/'||d.godina ,
+                  pp.naziv
+)
+        order by org_deo, datum_dok, datum_unosa
+)
+"REM WORKSPACETAB3",!!!!!!!!!!!!!!!!provera_ok.sql,,36
+select * from
+(
+Select d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo
+from dokument d
+where godina = &nGod
+  and vrsta_Dok = 90
+  and (d.godina , d.vrsta_Dok, d.broj_dok ) not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+and org_Deo=&nOrg
+
+union
+
+select d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo
+from dokument d, stavka_dok sd
+where d.godina = &nGod
+and org_Deo=&nOrg
+  and d.vrsta_Dok in (11,12,13,31)
+--  and (d.godina , 11, d.datum_dok, d.datum_unosa, d.user_Id )
+--       in (Select d1.godina , 11, d1.datum_dok, d1.datum_unosa, d1.user_Id from dokument d1
+--           where d1.godina = 2010 and d1.vrsta_Dok = 90
+--             and (d1.godina , d1.vrsta_Dok, d1.broj_dok )
+--                  not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+--          )
+  and (d.godina , d.vrsta_Dok, d.broj_dok )
+       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+  and sd.godina    (+)= d.godina and sd.vrsta_dok (+)= d.vrsta_dok and sd.broj_dok  (+)= d.broj_dok
+  and sd.cena * (decode,sd.valuta
+                       ,'YUD',1,
+                       ,(  Select Srednji From Kurs Where Kurs.Datum = d.datum_dok And Kurs.Val_Id = sd.valuta)
+                 )                 
+     
+   <> round(sd.cena1*faktor,4)
+
+
+group by d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo
+)
+order by org_deo, datum_unosa, datum_dok, vrsta_dok
+"REM WORKSPACETAB4",Query17,,3
+select * from KURS
+where datum > to_date('06.09.2011','dd.mm.yyyy')
+order by id
+"REM WORKSPACETAB5",Query22,,2
+select * from vezni_dok
+where godina = 2011
+"REM WORKSPACETAB6",Query19,,14
+Select
+
+		PDokument.UlazIzlaz( 11, 20, -1,to_date('08.10.2010','dd.mm.yyyy') ) UI_otp
+,		PDokument.UlazIzlaz( 12, 20, -1,to_date('08.10.2010','dd.mm.yyyy') ) UI_st_otp
+,		PDokument.UlazIzlaz( 13, 20, 1,to_date('08.10.2010','dd.mm.yyyy') ) UI_pov_otp
+,		PDokument.UlazIzlaz( 31, 20, 1,to_date('08.10.2010','dd.mm.yyyy') ) UI_st_pov_otp
+
+,       pdokument.ZokiUlazIzlaz( 11, 20, -1,'D',to_date('08.10.2010','dd.mm.yyyy')) zui_otp
+,       pdokument.ZokiUlazIzlaz( 12, 20, -1,'D',to_date('08.10.2010','dd.mm.yyyy')) zui_st_otp
+,       pdokument.ZokiUlazIzlaz( 13, 20, 1,'D',to_date('08.10.2010','dd.mm.yyyy')) zui_pov_otp
+,       pdokument.ZokiUlazIzlaz( 31, 20, 1,'D',to_date('08.10.2010','dd.mm.yyyy')) zui_st_pov_otp
+
+from dual
+
+"REM WORKSPACETAB7",Query20,,3
+Select *
+from vrsta_Dok
+where vrsta in (11,12,13,31)
+"REM WORKSPACETAB8",Dok_St,,76
+select
+       sD.ROWID
+       ,
+
+       d2.broj_dok brd_niv, d2.datum_dok, d2.datum_unosa,
+	   d.datum_dok, d.datum_unosa,
+
+	   d.status,d.VRSTA_DOK vrd, d.BROJ_DOK brd, d.GODINA god, d.TIP_DOK tip--,
+	 , d.poslovnica
+	 , d.DATUM_DOK
+	 , d.ORG_DEO mag     --, d.ROK_KASE lok_s, d.POSLOVNICA mag_n, d.DPO lok_n
+	 , d.PPARTNER prt, d.PP_ISPORUKE ppi, d.BROJ_DOK1 brd1
+	 , sd.proizvod
+     , sd.k_robe
+	 , case when d.vrsta_dok = 11 then
+	       (select
+                   sum(round(nvl(sign(ST.K_ROBE) * ST.KOLICINA * ST.FAKTOR * ST.K_ROBE * st.cena1 *
+                                 PDokument.ZokiUlazIzlaz(d.vrsta_dok,d.tip_dok,st.K_ROBE,'D',d.datum_dok)
+                                 ,0)
+                            ,2)
+
+                      )
+	        from stavka_dok st
+	        where st.godina = d.godina and st.vrsta_dok = d.vrsta_dok and st.broj_dok = d.broj_dok
+	       )
+	   end zad
+	 , (sd.cena-sd.cena1)*sd.kolicina*sd.faktor niv_zad
+                                  
+     ------------------------------------------------------------------------------------------------------------------	 
+     , case when d2.vrsta_dok = '90' then
+            nvl(  (select (case when vd3.za_vrsta_dok is null then -1 else 1 end)
+                   from vezni_dok vd3
+                   where vd3.vrsta_dok = d.vrsta_dok and vd3.godina = d.godina and vd3.broj_dok = d.broj_dok and vd3.za_vrsta_dok in(11)
+                   )
+                , -1)
+       end niv_k_r
+     ------------------------------------------------------------------------------------------------------------------	        
+
+from   stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+, (
+
+   select *
+   from vezni_dok vd
+   where za_vrsta_dok = '90'
+--     and vd.godina = d.godina and vd.vrsta_dok = d.vrsta_dok and vd.broj_dok = d.broj_dok
+  ) vd
+, (select * from dokument where godina = 2010 and vrsta_dok = 90 and org_Deo = 104 )  d2
+
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina (+) and d.vrsta_dok = sd.vrsta_dok (+) and d.broj_dok = sd.broj_dok  (+)
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  -----------------------------
+  -- ostali uslovi
+  and '2010' = d.godina
+--  AND TIP_DOK = 11
+AND D.ORG_DEO =  104
+--and sd.faktor <> 1
+--and proizvod = '260026'
+and (
+--          ( d.VRSTA_DOK = 10 And d.BROJ_DOK in('14157')) --1351--
+--      or
+          ( d.VRSTA_DOK in (11,12,13) )--And d.BROJ_DOK in('1125')) --1351--
+
+    )
+and vd.godina = d.godina and vd.vrsta_dok = d.vrsta_dok and vd.broj_dok = d.broj_dok
+and vd.za_godina = d2.godina and vd.za_vrsta_dok = d2.vrsta_dok and vd.za_broj_dok = d2.broj_dok
+  AND NVL ( SD.CENA , 0 ) <>  NVL ( SD.CENA1 , 0 )
+-- PProdajniCenovnik.Cena( SD.Proizvod,D.Datum_Dok,SD.Valuta,SD.Faktor)
+--  and d.datum_dok >= to_date('01.11.2010','dd.mm.yyyy')
+and d.status > 0
+and k_robe <> 0
+--and proizvod  = 4208
+and d.datum_dok <= to_date('31.10.2010','dd.mm.yyyy')
+order by d.datum_dok, d.datum_unosa;
+"REM WORKSPACETAB9",Query12,,14
+select D.*
+
+from dokument d, stavka_dok sd
+Where
+  -- veza tabela
+      d.godina = sd.godina (+) and d.vrsta_dok = sd.vrsta_dok (+) and d.broj_dok = sd.broj_dok  (+)
+--and  d.VRSTA_DOK in (11,12,13,31)
+AND D.ORG_DEO =  104
+and d.status > 0
+and k_robe <> 0
+--and proizvod  = 4208
+and d.datum_dok <= to_date('31.10.2010','dd.mm.yyyy')
+AND KOLICINA <> REALIZOVANO
+order by to_number(sd.proizvod), sd.vrsta_dok
+"REM WORKSPACETAB10",Query13,,14
+select d.godina, d.broj_dok, d.datum_dok, d.broj_dok1, sd.proizvod
+
+from dokument d, stavka_dok sd
+Where
+  -- veza tabela
+      d.godina = sd.godina (+) and d.vrsta_dok = sd.vrsta_dok (+) and d.broj_dok = sd.broj_dok  (+)
+and  d.VRSTA_DOK in (31)
+AND D.ORG_DEO =  104
+and d.status > 0
+and k_robe <> 0
+--and proizvod  = 4208
+and d.datum_dok <= to_date('31.10.2010','dd.mm.yyyy')
+----and sd.proizvod in (3184)
+order by to_number(sd.proizvod), d.datum_dok, d.datum_unosa
+"REM WORKSPACETAB11",Query14,,8
+SELECT * FROM DOKUMENT D
+WHERE D.GODINA = 2010
+  AND ORG_dEO = 104
+  AND DATUM_DOK <= to_date('31.10.2010','dd.mm.yyyy')
+  AND D.VRSTA_dOK NOT IN (2,9,10,61,62)
+  AND D.STATUS > 0
+  AND D.BROJ_DOK1 > 0
+ORDER BY D.DATUM_DOK
+"REM WORKSPACETAB12",Query17,,23
+SELECT
+d1.godina, d1.vrsta_dok, d1.status, d1.datum_dok, d1.datum_unosa, d1.broj_dok, d1.org_Deo,d1.broj_dok1,
+d.godina, d.vrsta_dok, d.status, d.datum_dok, d.datum_unosa, d.broj_dok, d.org_Deo,d.broj_dok1,
+--sd.proizvod, sd.kolicina, sd.cena, sd.cena1, sd.rabat,sd.porez
+sd.*
+FROM DOKUMENT D, stavka_dok sd
+,
+       (select * from vezni_dok vd
+        where vd.godina = 2010
+          and vd.za_vrsta_Dok = 90
+
+       ) vd
+, dokument d1
+WHERE D.GODINA = 2010
+  AND d.ORG_dEO = 104
+  AND d.DATUM_DOK = to_date('08.10.2010','dd.mm.yyyy')
+  AND D.VRSTA_dOK NOT IN (2,9,10,61,62)
+  AND D.STATUS > 0
+  AND D.BROJ_DOK1 > 0
+  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok  and d.broj_dok = sd.broj_dok
+and vd.broj_dok = d.broj_dok and vd.vrsta_Dok = d.vrsta_dok and vd.godina = d.godina
+and vd.za_broj_dok = d1.broj_dok and vd.za_vrsta_Dok = d1.vrsta_dok and vd.za_godina = d1.godina
+ORDER BY D.DATUM_DOK
+"REM WORKSPACETAB13","Koeficijent na izlazu",,6
+--	vrsta_dok	naziv     			strana gledanja
+--	---------	-----------------	--------------------
+--	11			otpremnica			+ 1
+-- 	12			storno otp			- 1
+--	13			pov. po otp			- 1
+--	31			stor. pov. po otp	+ 1
+"REM WORKSPACETAB14",DOKUMENT.sql,,77
+SELECT   d.rowid,
+--d.datum_dok + d.valuta_placanja,
+D.*
+, (cena-cena1) * kolicina
+FROM
+--dokument  d
+-- VEZNI_DOK d
+--,
+--komentar d
+--FROM
+stavka_Dok d --,
+--vezni_dok d
+--update dokument
+--set datum_dok = to_date('03.09.2007','dd.mm.yyyy')
+WHERE d.godina = 2010
+
+
+
+and (
+          ( d.VRSTA_DOK = 11 And d.BROJ_DOK in('22723')) --1351--
+      or
+          ( d.VRSTA_DOK = 90 And d.BROJ_DOK in('675')) --1351--
+
+    )
+--and proizvod = 18379
+--  and org_deo = 101
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+-- 21101 -- 18379
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(7627,7581)
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+"REM WORKSPACETAB15",Query15,,4
+sELECT * FROM VEZNI_DOK
+WHERE GODINA = 2010
+  AND VRSTA_DOK = 12
+  AND BROJ_DOK = '118'
+"REM WORKSPACETAB16",Query16,,8
+SELECT
+
+PROIZVOD, KOLICINA, REALIZOVANO,RABAT,CENA,CENA1
+
+FROM STAVKA_DOK
+WHERE GODINA = 2010
+  AND VRSTA_DOK = 12
+  AND BROJ_DOK = '19'

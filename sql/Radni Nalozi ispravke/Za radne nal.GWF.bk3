@@ -1,0 +1,94 @@
+"REM WORKSPACETAB0",Query4,,2
+Select * from proizvod
+where sifra in (21696,21697)
+"REM WORKSPACETAB1",Query14,,6
+Select *
+From proizvod@vital
+where JED_MERE = 'l'
+  and PRODAJNA_JM = 'kom'
+and tip_proizvoda = '01'
+and faktor_prodajne < 1
+"REM WORKSPACETAB2",Query16,,2
+114112
+.32
+"REM WORKSPACETAB3",Query17,,2
+Select PProdajniCenovnik.Cena@vital(114112,sysdate,'YUD',.32 )
+from dual
+"REM WORKSPACETAB4",Query15,,2
+Select * from prodajni_cenovnik@vital
+where proizvod = 114112
+"REM WORKSPACETAB5",Query5,,2
+Select ascii(substr(naziv,1,1)) prvi, p.* from proizvod p
+where sifra in (21696,21697)
+"REM WORKSPACETAB6",Query7,,4
+select rowid, t.* from USLUGA t
+
+WHERE   BROJ_DOK in(1145)
+  and GODINA = 2010
+"REM WORKSPACETAB7",Query6,,2
+Select p.* from proizvod p
+where ascii(substr(naziv,1,1)) = 10
+"REM WORKSPACETAB8",Query10,,16
+-- Tabele Vezni_dok
+-- Kada pogresno upisu ili ne upisu radni_nalog
+-- On se upisuje i u : predatnici , trebovanju ...
+-- za_vrsta_dok = '29'
+-- Takodje se tu gledaju i ostale veze imedju dokumenata
+-- NAPOMENA ::: Kada se iz prijemnice vezuje otpremnica onda se
+-- otrpemnica u veznom_dok uvek upisuje kao vrsta_dok 24
+
+
+-- prvi upit
+-- u prvo ispravi polje za_broj_dok na '1000-281'
+SELECT godina, vrsta_Dok, pvrstadok.naziv(vrsta_dok)vr_naz, za_vrsta_dok, pvrstadok.naziv(za_vrsta_dok) za_vr_naz
+FROM VEZNI_DOK@vital
+where vrsta_dok    in ( '8' )
+group by godina, vrsta_Dok, za_vrsta_dok
+order by godina, vrsta_Dok, za_vrsta_dok
+"REM WORKSPACETAB9",Query11,,33
+select vd.BROJ_DOK
+     , (select za_broj_dok from vezni_dok@vital vd1
+        where vd.godina = vd1.godina and vd.vrsta_dok = vd1.vrsta_dok and vd.broj_dok = vd1.broj_dok and za_vrsta_dok = 29
+        ) RAD_NAL
+     , vd.VRSTA_DOK, vd.GODINA
+
+     , vd.ZA_BROJ_DOK
+     , (select broj_dok from vezni_dok@vital vd1
+        where vd.za_godina = vd1.za_godina and vd.za_vrsta_dok = vd1.za_vrsta_dok and vd.za_broj_dok = vd1.za_broj_dok and vrsta_dok = 29
+        ) ZA_RAD_NAL
+
+     , vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+
+
+from vezni_dok@vital vd
+
+where (vd.BROJ_DOK,vd.VRSTA_DOK,vd.GODINA)
+in
+(
+	SELECT BROJ_DOK,VRSTA_DOK,GODINA FROM VEZNI_DOK@vital
+	where godina = 2007 and vrsta_dok    in ( '1' ) and broj_dok = 4946
+	--  and za_vrsta_dok in (46)
+
+	union
+
+	SELECT ZA_BROJ_DOK,ZA_VRSTA_DOK,ZA_GODINA
+	FROM VEZNI_DOK@vital
+	where godina = 2007 and vrsta_dok    in ( '1' ) and broj_dok = 4946 and za_vrsta_Dok <> 29
+)
+
+group by vd.BROJ_DOK,vd.VRSTA_DOK,vd.GODINA,vd.ZA_BROJ_DOK,vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+
+Order by vd.vrsta_dok
+"REM WORKSPACETAB10",Query12,,5
+	SELECT *
+	FROM VEZNI_DOK@vital
+	where godina = 2007
+	  and vrsta_dok    in ( '46' )
+	  and broj_dok = 1
+"REM WORKSPACETAB11",Query13,,6
+
+	SELECT ZA_BROJ_DOK,ZA_VRSTA_DOK,ZA_GODINA
+	FROM VEZNI_DOK@vital
+	where godina = 2007
+	  and vrsta_dok    in ( '1' )
+	  and broj_dok = 4946

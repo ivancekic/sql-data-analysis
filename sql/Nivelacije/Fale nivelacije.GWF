@@ -1,0 +1,223 @@
+"REM WORKSPACETAB0",Query1,,28
+(
+	select BROJ_DOK,VRSTA_DOK,GODINA
+	from
+	(
+	Select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d
+	where godina = &God
+	  and vrsta_Dok = 90
+	  AND D.ORG_DEO BETWEEN 103 AND 103
+	  and (d.godina , d.vrsta_Dok, d.broj_dok ) not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+	  and d.org_deo not in (select magacin from partner_magacin_flag)
+	  and d.status >=1
+	union
+
+	select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d, stavka_dok sd
+	where d.godina = &God
+	  and d.vrsta_Dok in (11,12,13,31,74)
+	  and sd.valuta = 'YUD'
+	  AND D.ORG_DEO BETWEEN 103 AND 103
+	  and (d.godina , d.vrsta_Dok, d.broj_dok )
+	       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+	  and sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+	  and sd.cena <> round(sd.cena1*sd.faktor,4)
+	  And d.org_deo not in (select magacin from partner_magacin_flag) And d.status >=1
+	group by d.status, d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	)
+)
+"REM WORKSPACETAB1",Query2,,49
+select
+       D.GODINA, D.VRSTA_DOK, D.BROJ_DOK, d.tip_dok, D.ORG_DEO, D.BROJ_DOK1, D.DATUM_dOK
+     , SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.JED_MERE, SD.FAKTOR, SD.KOLICINA
+     , SD.CENA
+     , PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+     , SD.CENA1
+     , PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , 1  ) PROD_CELA
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  -----------------------------
+
+AND (D.BROJ_DOK, D.VRSTA_DOK, D.GODINA )
+    IN
+(
+	select BROJ_DOK,VRSTA_DOK,GODINA
+	from
+	(
+	Select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d
+	where godina = &God
+	  and vrsta_Dok = 90
+	--  AND D.ORG_DEO BETWEEN 169 AND 169
+	  and (d.godina , d.vrsta_Dok, d.broj_dok ) not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+	  and d.org_deo not in (select magacin from partner_magacin_flag)
+	  and d.status >=1
+	union
+
+	select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d, stavka_dok sd
+	where d.godina = &God
+	  and d.vrsta_Dok in (11,12,13,31,74)
+	  and sd.valuta = 'YUD'
+	--  AND D.ORG_DEO BETWEEN 169 AND 169
+	  and (d.godina , d.vrsta_Dok, d.broj_dok )
+	       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+	  and sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+	  and sd.cena <> sd.cena1
+	  And d.org_deo not in (select magacin from partner_magacin_flag) And d.status >=1
+	group by d.status, d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	)
+)
+--AND SD.CENA != PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , SD.FAKTOR  )
+--AND SD.CENA1 != PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , 1  )
+order by d.datum_dok,d.datum_unosa;
+"REM WORKSPACETAB2",Query3,,49
+select
+       D.GODINA GOD, D.VRSTA_DOK VRD, D.BROJ_DOK BRD, d.tip_dok TIP, D.ORG_DEO MAG, D.BROJ_DOK1 BRD1, D.DATUM_dOK
+     , SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.JED_MERE, SD.FAKTOR, SD.KOLICINA
+     , SD.CENA
+     , PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+     , SD.CENA1
+     , PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , 1  ) PROD_CELA
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  -----------------------------
+
+AND (D.BROJ_DOK, D.VRSTA_DOK, D.GODINA )
+    IN
+(
+	select BROJ_DOK,VRSTA_DOK,GODINA
+	from
+	(
+	Select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d
+	where godina = &God
+	  and vrsta_Dok = 90
+	--  AND D.ORG_DEO BETWEEN 169 AND 169
+	  and (d.godina , d.vrsta_Dok, d.broj_dok ) not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+	  and d.org_deo not in (select magacin from partner_magacin_flag)
+	  and d.status >=1
+	union
+
+	select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d, stavka_dok sd
+	where d.godina = &God
+	  and d.vrsta_Dok in (11,12,13,31,74)
+	  and sd.valuta = 'YUD'
+	--  AND D.ORG_DEO BETWEEN 169 AND 169
+	  and (d.godina , d.vrsta_Dok, d.broj_dok )
+	       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+	  and sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+	  and sd.cena <> sd.cena1
+	  And d.org_deo not in (select magacin from partner_magacin_flag) And d.status >=1
+	group by d.status, d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	)
+)
+--AND SD.CENA != PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , SD.FAKTOR  )
+--AND SD.CENA1 != PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , 1  )
+order by d.datum_dok,d.datum_unosa;
+"REM WORKSPACETAB3",Dok_st_dok5.sql,,88
+select
+sd.ROWID , --pjedmere.naziv(sd.proizvod) jm,
+--pproizvod.naziv(sd.proizvod) ,
+--SD.BROJ_DOK,
+--D.org_deo, d.poslovnica,  d.vrsta_izjave,
+--sd.proizvod, SD.porez
+--,sd.cena,sd.cena1
+--,Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+--,sd.stavka
+--d.rowid, d.vrsta_izjave,d.org_deo, d.broj_dok1, sd.*
+--D.ROWID,-- D.*,
+--sd.jed_mere, p.jed_mere,
+--d.status, d.datum_dok, D.ORG_DEO, D.BROJ_DOK1,
+d.*,
+SD.*
+--D.DATUM_dOK, SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.KOLICINA,SD.CENA,SD.CENA1
+--, sd.cena * (1-sd.rabat/100)
+----,Obracunaj_JUS(sd.proizvod, sd.neto_kg, sd.proc_vlage, sd.proc_necistoce,nvl(sd.htl,0))
+----, (sd.kolicina * 2) z_t_osn, round((sd.kolicina * 2 * 1.18),2) z_t_uk
+, OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, sd.faktor, sd.valuta,0) odgov
+----, PProdajniCenovnikGrKup.Cena ('GKNEU', sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) neu
+--, PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+--, Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+--,Kolicina * Faktor * 100 / Kolicina_Kontrolna jacina
+--d.tip_dok,pproizvod.naziv(sd.proizvod),--sd.*
+--sd.proizvod , pproizvod.naziv(sd.proizvod),sum (sd.kolicina * sd.faktor * sd.k_robe)
+--,d.status,sd.kolicina, sd.realizovano
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  -----------------------------
+  -- ostali uslovi
+  and '2011' = d.godina
+--  AND TIP_DOK = 11
+AND D.ORG_DEO = 104
+--and sd.faktor <> 1
+  and proizvod = '7983'
+--  and (k_robe <>0 or d.vrsta_Dok = 80)
+--and      d.vrsta_dok in ('70','71')
+--  and d.broj_dok = 19
+--and (
+----          ( d.VRSTA_DOK = 80 And d.BROJ_DOK in('23')) --1351--
+----      or
+----          ( d.VRSTA_DOK = 2 And d.BROJ_DOK in('156')) --1351--
+--
+--    )
+--and proizvod in (select proizvod from stavka_dok
+--where godina = 2010
+-- and vrsta_dok = 3
+-- and broj_dok = 21028)
+
+--  AND NVL ( SD.CENA , 0 ) <>  NVL ( SD.CENA1 , 0 )
+--
+--  and d.status >= 1
+--  and ( nvl(sd.cena1,0) <= 0 or nvl(sd.cena,0) <= 0 )
+--  and d.vrsta_dok  IN ( 1,26,45,46,
+--                        8,27,28,32 )
+--  and tip_dok = 23
+--  and sd.stavka = 1
+--  and d.broj_dok in (10)
+-- and d.broj_dok1 in (1595)
+--   AND SD.CENA <> 18
+-- PProdajniCenovnik.Cena( SD.Proizvod,D.Datum_Dok,SD.Valuta,SD.Faktor)
+--  and d.datum_dok = to_date('01.01.2010','dd.mm.yyyy')
+--  and sd.proizvod = 18379
+--AND D.VRSTA_DOK = 3
+and d.status > 0
+--and sd.kolicina <> sd.realizovano
+--and k_robe <> 0
+--and nvl(sd.cena1,0) = 0
+--  and proizvod in ('10174','10175')
+--order by --to_number(sd.proizvod),
+----d.datum_dok ,
+--to_number(sd.broj_dok)
+--to_number(sd.proizvod)--,sd.stavka -- ,
+--
+----, d.broj_dok , stavka
+--ORDER BY TO_NUMBER(PROIZVOD),
+--         D.DATUM_UNOSA,
+--         TO_NUMBER(d.vrsta_dok),
+--         TO_NUMBER(d.BROJ_dok)
+--         --datum_dok--, stavka--
+--
+--and sd.stavka = 98
+order by d.datum_dok,d.datum_unosa;
+"REM WORKSPACETAB4",Query6,,2
+SELECT PAplikacijaForme.POLJA_FORMAT('POVRATNICAPOPRIJEMNICI','STAVKA','cena')
+FROM DUAL
+"REM WORKSPACETAB5",Query7,,1
+select * from APLIKACIJA_FORME_DEF

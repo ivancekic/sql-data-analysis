@@ -1,0 +1,60 @@
+"REM WORKSPACETAB0",Query1,,9
+--SELECT * FROM ZALIHE_ANALITIKA
+--WHERE LOKACIJA IS NULL
+--AND ORG_DEO NOT IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+
+SELECT PROIZVOD , pproizvod.naziv(proizvod) FROM ZALIHE_ANALITIKA
+WHERE LOKACIJA IS NULL
+AND ORG_DEO NOT IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+GROUP BY PROIZVOD
+ORDER BY TO_NUMBER(PROIZVOD)
+"REM WORKSPACETAB1",Query4,,27
+select --distinct sd.proizvod
+D.* , SD.*
+--sd.rowid , d.status,d.Godina god , d.vrsta_dok vr, d.Broj_Dok br, d.org_deo mag1, d.poslovnica mag2, d.broj_dok1 br1, d.datum_dok,
+--       sd.proizvod , sd.cena , sd.valuta,sd.kolicina , sd.realizovano,sd.rabat,sd.cena1, pproizvod.tip(sd.proizvod) tip ,
+--       OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, sd.faktor, sd.valuta,0) odgov
+--d.tip_dok,pproizvod.naziv(sd.proizvod),sd.*
+--sd.proizvod , pproizvod.naziv(sd.proizvod),sum (sd.kolicina * sd.faktor * sd.k_robe)
+from   stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      sd.godina    (+)= d.godina
+  and sd.vrsta_dok (+)= d.vrsta_dok
+  and sd.broj_dok  (+)= d.broj_dok
+
+  AND SD.PROIZVOD = P.SIFRA
+  AND P.GRUPA_PROIZVODA=  GPR.ID
+
+ -----------------------------
+  -- ostali uslovi
+  and d.godina = 2007
+  and d.vrsta_dok  NOT IN (2,9,10)
+  and proizvod in ( 97,6909,7418,8368,9416,11087,11426,11568,11570,12951,13676,14557,14776,15148,15660,15987,
+                    16224,16649,16990,17488,17832,18087 )
+  AND LOKACIJA IS NULL
+order by --to_number(sd.proizvod),
+d.datum_dok ,to_number(sd.VRSTA_dok),to_number(sd.broj_dok)
+"REM WORKSPACETAB2",Query5,,21
+select distinct org_deo , porganizacionideo.naziv(org_deo)
+from   stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      sd.godina    (+)= d.godina
+  and sd.vrsta_dok (+)= d.vrsta_dok
+  and sd.broj_dok  (+)= d.broj_dok
+
+  AND SD.PROIZVOD = P.SIFRA
+  AND P.GRUPA_PROIZVODA=  GPR.ID
+
+ -----------------------------
+  -- ostali uslovi
+  and d.godina = 2007
+  and d.vrsta_dok  NOT IN (2,9,10)
+  --and proizvod in ( 97,6909,7418,8368,9416,11087,11426,11568,11570,12951,13676,14557,14776,15148,15660,15987,
+--                    16224,16649,16990,17488,17832,18087 )
+  AND LOKACIJA IS NULL
+order by org_deo
+

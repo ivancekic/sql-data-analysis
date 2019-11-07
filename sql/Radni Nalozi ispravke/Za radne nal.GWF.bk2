@@ -1,0 +1,214 @@
+"REM WORKSPACETAB0",Query4,,2
+Select * from proizvod
+where sifra in (21696,21697)
+"REM WORKSPACETAB1",Query14,,6
+Select *
+From proizvod@vital
+where JED_MERE = 'l'
+  and PRODAJNA_JM = 'kom'
+and tip_proizvoda = '01'
+and faktor_prodajne < 1
+"REM WORKSPACETAB2",Query16,,2
+114112
+.32
+"REM WORKSPACETAB3",Query17,,2
+Select PProdajniCenovnik.Cena@vital(114112,sysdate,'YUD',.32 )
+from dual
+"REM WORKSPACETAB4",Query15,,2
+Select * from prodajni_cenovnik@vital
+where proizvod = 114112
+"REM WORKSPACETAB5",Query5,,2
+Select ascii(substr(naziv,1,1)) prvi, p.* from proizvod p
+where sifra in (21696,21697)
+"REM WORKSPACETAB6",Query7,,4
+select rowid, t.* from USLUGA t
+
+WHERE   BROJ_DOK in(1145)
+  and GODINA = 2010
+"REM WORKSPACETAB7",Query6,,2
+Select p.* from proizvod p
+where ascii(substr(naziv,1,1)) = 10
+"REM WORKSPACETAB8","Vezni distinct dok",,16
+-- Tabele Vezni_dok
+-- Kada pogresno upisu ili ne upisu radni_nalog
+-- On se upisuje i u : predatnici , trebovanju ...
+-- za_vrsta_dok = '29'
+-- Takodje se tu gledaju i ostale veze imedju dokumenata
+-- NAPOMENA ::: Kada se iz prijemnice vezuje otpremnica onda se
+-- otrpemnica u veznom_dok uvek upisuje kao vrsta_dok 24
+
+
+-- prvi upit
+-- u prvo ispravi polje za_broj_dok na '1000-281'
+SELECT godina, vrsta_Dok, pvrstadok.naziv(vrsta_dok)vr_naz, za_vrsta_dok, pvrstadok.naziv(za_vrsta_dok) za_vr_naz
+FROM VEZNI_DOK@vital
+where vrsta_dok    in ( '8' )
+group by godina, vrsta_Dok, za_vrsta_dok
+order by godina, vrsta_Dok, za_vrsta_dok
+"REM WORKSPACETAB9","Vezni Predatnice",,33
+select vd.BROJ_DOK
+     , (select za_broj_dok from vezni_dok@vital vd1
+        where vd.godina = vd1.godina and vd.vrsta_dok = vd1.vrsta_dok and vd.broj_dok = vd1.broj_dok and za_vrsta_dok = 29
+        ) RAD_NAL
+     , vd.VRSTA_DOK, vd.GODINA
+
+     , vd.ZA_BROJ_DOK
+     , (select broj_dok from vezni_dok@vital vd1
+        where vd.za_godina = vd1.za_godina and vd.za_vrsta_dok = vd1.za_vrsta_dok and vd.za_broj_dok = vd1.za_broj_dok and vrsta_dok = 29
+        ) ZA_RAD_NAL
+
+     , vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+
+
+from vezni_dok@vital vd
+
+where (vd.BROJ_DOK,vd.VRSTA_DOK,vd.GODINA)
+in
+(
+	SELECT BROJ_DOK,VRSTA_DOK,GODINA FROM VEZNI_DOK@vital
+	where godina = 2007 and vrsta_dok    in ( '1' ) and broj_dok = 4946
+	--  and za_vrsta_dok in (46)
+
+	union
+
+	SELECT ZA_BROJ_DOK,ZA_VRSTA_DOK,ZA_GODINA
+	FROM VEZNI_DOK@vital
+	where godina = 2007 and vrsta_dok    in ( '1' ) and broj_dok = 4946 and za_vrsta_Dok <> 29
+)
+
+group by vd.BROJ_DOK,vd.VRSTA_DOK,vd.GODINA,vd.ZA_BROJ_DOK,vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+
+Order by vd.vrsta_dok
+"REM WORKSPACETAB10","Vezni trebovanja",,3
+SELECT BROJ_DOK,VRSTA_DOK,GODINA FROM VEZNI_DOK@vital
+	where godina = 2009 and vrsta_dok    in ( '8' ) and za_vrsta_dok in (32)
+
+"REM WORKSPACETAB11","VEZNI TREBOAVANJA",,33
+select vd.BROJ_DOK
+     , (select za_broj_dok from vezni_dok@vital vd1
+        where vd.godina = vd1.godina and vd.vrsta_dok = vd1.vrsta_dok and vd.broj_dok = vd1.broj_dok and za_vrsta_dok = 29
+        ) RAD_NAL
+     , vd.VRSTA_DOK, vd.GODINA
+
+     , vd.ZA_BROJ_DOK
+     , (select broj_dok from vezni_dok@vital vd1
+        where vd.za_godina = vd1.za_godina and vd.za_vrsta_dok = vd1.za_vrsta_dok and vd.za_broj_dok = vd1.za_broj_dok and vrsta_dok = 29
+        ) ZA_RAD_NAL
+
+     , vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+
+
+from vezni_dok@vital vd
+
+where (vd.BROJ_DOK,vd.VRSTA_DOK,vd.GODINA)
+in
+(
+	SELECT BROJ_DOK,VRSTA_DOK,GODINA FROM VEZNI_DOK@vital
+	where godina = 2009 and vrsta_dok    in ( '8' ) and broj_dok = 5304
+	--  and za_vrsta_dok in (46)
+
+	union
+
+	SELECT ZA_BROJ_DOK,ZA_VRSTA_DOK,ZA_GODINA
+	FROM VEZNI_DOK@vital
+	where godina = 2009 and vrsta_dok    in ( '8' ) and broj_dok = 5304 and za_vrsta_Dok <> 29
+)
+AND BROJ_DOK <> '.'
+group by vd.BROJ_DOK,vd.VRSTA_DOK,vd.GODINA,vd.ZA_BROJ_DOK,vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+
+Order by vd.vrsta_dok
+"REM WORKSPACETAB12",DOKUMENT.sql,,69
+SELECT   d.rowid,
+D.*
+FROM
+--VEZNI_DOK d
+--,
+dokument d
+--FROM
+--stavka_Dok d --, vezni_dok vd
+--update dokument
+--set datum_dok = to_date('03.09.2007','dd.mm.yyyy')
+WHERE d.godina = 2010
+and (
+          ( VRSTA_DOK = 10 And BROJ_DOK in('21898')) --1351--
+       OR
+          ( VRSTA_DOK = 11 And BROJ_DOK in('21266')) --1351
+    )
+
+--  and org_deo = 101
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(7627,7581)
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+"REM WORKSPACETAB13",Query21,,4
+select rowid, t.* from OTPREMA_KA_FIRMAMA t
+where godina = 2010
+  and vrsta_Dok = 11
+  and broj_dok = 21270
+"REM WORKSPACETAB14",Query22,,4
+select rowid, t.* from OTPREMA_KA_FIRMAMA_LOG t
+where godina = 2010
+  and vrsta_Dok = 11
+  and broj_dok = 21270
+"REM WORKSPACETAB15",Query23,,1
+select rowid, t.* from OTPREMA_PROIZVODI_FIRME t
+"REM WORKSPACETAB16",Query12,,5
+	SELECT *
+	FROM VEZNI_DOK@vital
+	where godina = 2007
+	  and vrsta_dok    in ( '46' )
+	  and broj_dok = 1
+"REM WORKSPACETAB17",Query13,,6
+
+	SELECT ZA_BROJ_DOK,ZA_VRSTA_DOK,ZA_GODINA
+	FROM VEZNI_DOK@vital
+	where godina = 2007
+	  and vrsta_dok    in ( '1' )
+	  and broj_dok = 4946

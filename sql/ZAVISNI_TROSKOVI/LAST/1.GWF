@@ -1,0 +1,133 @@
+"REM WORKSPACETAB0",DOKUMENT.sql,,71
+SELECT   d.rowid,
+D.*
+FROM stavka_dok d --, vezni_dok vd
+--FROM stavka_Dok d --, vezni_dok vd
+--update dokument
+--set datum_dok = to_date('03.09.2007','dd.mm.yyyy')
+WHERE d.godina = 2010
+and (  (VRSTA_DOK = 3 AND BROJ_DOK IN (806) )
+--      OR (VRSTA_DOK = 11 AND BROJ_DOK = 1381)
+    )
+--739,
+--929,
+--1020,
+--1099) --3553--3554     --924
+--  and org_Deo = 90
+--  and BROJ_DOK in (795)--(171,185,194,240)
+
+  -- 665 85
+
+
+--  and org_deo = 92
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+----order by to_number(broj_dok1)
+order by to_number (d.broj_dok )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+"REM WORKSPACETAB1",Query29,,14
+Update dokument
+set status = -8
+where godina = 2010 and VRSTA_DOK = 3 AND BROJ_DOK = 806
+/
+Update zavisni_troskovi
+set status = 0
+where godina = 2010 and VRSTA_DOK = 3 AND BROJ_DOK = 806
+/
+Update stavka_Dok
+set cena1 = cena
+  , Z_TROSKOVI = 0
+where godina = 2010 and VRSTA_DOK = 3 AND BROJ_DOK = 806
+/
+commit
+"REM WORKSPACETAB2",Query25,,1
+Exec UPDATEZAVISNIHTROSKOVA1 (-9,'NAB', '3', '806', 2010);
+"REM WORKSPACETAB3",Query28,,7
+select sum(zts.iznos_troska)
+  from zavisni_troskovi_stavke zts, zavisni_troskovi_vrste ztv
+ where zts.vrsta_dok      = 3
+    And zts.broj_dok       = 806
+    And zts.godina         = 2010
+   and zts.vrsta_troskova = ztv.vrsta_troskova
+   and ztv.formula        = 1;
+"REM WORKSPACETAB4",Query13,,3
+Select ROWID, M.* from mapiranje M
+where UL02 = 'GORDANAD'
+--ORDER BY MODUL, ul02--, TO_NUMBER(UL03), TO_NUMBER(UL01)
+"REM WORKSPACETAB5",Query7,,1
+Exec GenerisiStanjeZaliha(40,sysdate,true)
+"REM WORKSPACETAB6",Query24,,8
+  Select sum(zts.iznos_troska)
+  From zavisni_troskovi_stavke zts, zavisni_troskovi_vrste ztv
+  Where zts.vrsta_dok      = 3
+    And zts.broj_dok       = 806
+    And zts.godina         = 2010
+    And zts.STAVKA_PRIJ    = 3
+    And zts.vrsta_troskova = ztv.vrsta_troskova
+    And ztv.formula        = 2;
+"REM WORKSPACETAB7",Query27,,12
+  Select sd.stavka, sd.Z_TROSKOVI,  zts.iznos_troska
+  From zavisni_troskovi_stavke zts, zavisni_troskovi_vrste ztv, stavka_Dok sd
+  Where zts.vrsta_dok      = 3
+    And zts.broj_dok       = 806
+    And zts.godina         = 2010
+    And zts.vrsta_troskova = ztv.vrsta_troskova
+    And ztv.formula        = 2
+
+    And zts.vrsta_dok      = sd.vrsta_Dok
+    And zts.broj_dok       = sd.broj_dok
+    And zts.godina         = sd.godina
+    And zts.stavka_prij = sd.stavka
+"REM WORKSPACETAB8",Query30,,7
+select ztst.*,pp.*,ztvr.naziv naziv_vt
+from zavisni_troskovi_stavke ztst, poslovni_partner pp, zavisni_troskovi_vrste ztvr
+where ztst.vrsta_troskova = ztvr.vrsta_troskova
+  and ztst.dobavljac_vr_tro = pp.sifra
+  and ztst.broj_dok  = 806
+  and ztst.vrsta_dok = '3'
+  and ztst.godina    = 2010

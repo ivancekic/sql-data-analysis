@@ -1,0 +1,34 @@
+"REM WORKSPACETAB0",Query1,,16
+select z.ORG_DEO,z.PROIZVOD,z.MIN_KOL,z.MAX_KOL,z.KOL_NAR,z.STANJE,z.REZERVISANA
+     , z.STANJE - z.REZERVISANA rasp
+     , z.STANJE - z.REZERVISANA + z.OCEKIVANA rasp_NAR
+     , (z.STANJE - z.REZERVISANA) / p.faktor_prodajne rasp_pro
+     , z.U_KONTROLI,z.OCEKIVANA,z.STANJE_KONTROLNA
+     , p.faktor_prodajne
+
+     , z.STANJE - z.REZERVISANA + z.OCEKIVANA rasp_NAR
+from zalihe z, proizvod p, ZALIHE_UNION_REZ_INVEJ_MAG zu
+where p.sifra = z.proizvod
+and (z.STANJE < 0 OR (z.REZERVISANA + INVEJ_REZ_21_22)> z.STANJE)
+  and z.org_deo=zu.org_deo
+  and z.proizvod=zu.proizvod
+
+--  and proizvod in (select proizvod from stavka_dok where godina = 2012 and vrsta_dok = 9 and broj_dok = 53)
+order by z.org_deo, to_number(z.proizvod)
+"REM WORKSPACETAB1",Query3,,14
+select z.ORG_DEO,z.PROIZVOD,z.MIN_KOL,z.MAX_KOL,z.KOL_NAR,z.STANJE,z.REZERVISANA
+     , z.STANJE - z.REZERVISANA rasp
+     , z.STANJE - z.REZERVISANA + OCEKIVANA rasp_NAR
+     , (z.STANJE - z.REZERVISANA) / p.faktor_prodajne rasp_pro
+     , z.U_KONTROLI,z.OCEKIVANA,z.STANJE_KONTROLNA
+     , p.faktor_prodajne
+from zalihe z, proizvod p
+where 
+(z.STANJE < 0 OR z.REZERVISANA > z.STANJE)
+  and 
+  p.sifra = z.proizvod
+
+--  and proizvod in (select proizvod from stavka_dok where godina = 2012 and vrsta_dok = 9 and broj_dok = 53)
+order by z.org_deo, to_number(z.proizvod)
+"REM WORKSPACETAB2",Query2,,1
+Select * from ZALIHE_UNION_REZ_INVEJ_MAG

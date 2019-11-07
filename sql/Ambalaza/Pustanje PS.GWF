@@ -1,0 +1,83 @@
+"REM WORKSPACETAB0","Ukupno PS po godini",,2
+Select PPSAmbalaze.GenerisanaPS(2015)
+from dual
+"REM WORKSPACETAB1","gen stanje zal",,1
+exec PPSAmbalaze.GenerisiStanjeAmbalaze;
+"REM WORKSPACETAB2","Pomocna tab",,4
+Select * from ps_ambalaze
+where godina = 2015
+order by godina
+, to_number(partner)
+"REM WORKSPACETAB3","Upucaj u tabelu",,48
+insert into PS_Ambalaze
+select
+--distinct sifra, mag_amb
+2015 GODINA, sifra PARTNER, PROIZVOD,ULAZ,IZLAZ
+from
+(
+
+Select pp.teren, obl.naziv naziv_ter, pp.sifra, pp.naziv  naziv_partner
+     , (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG PF WHERE PF.PPARTNER = pp.sifra ) MAG_AMB
+
+      , sd.Proizvod, P.Naziv pro_naziv,
+       ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+       ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+       ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje,
+       p.Jed_Mere JedMere
+
+
+,      case when ( Sum ( Kolicina * Faktor * K_Robe ) ) < 0 Then
+                  0
+       else
+                 ( Sum ( Kolicina * Faktor * K_Robe ) )
+       end UL
+
+,      case when ( Sum ( Kolicina * Faktor * K_Robe ) ) < 0 Then
+                 ABS(( Sum ( Kolicina * Faktor * K_Robe ) ))
+       else
+                 0
+       end IZL
+
+
+From Dokument d, Stavka_Dok sd, Proizvod p, Poslovni_partner pp, Oblast Obl
+--         Where (d.Tip_Dok In ( 14, 15, 203, 204, 99, 301, 402, 61, 60 ) or d.vrsta_Dok = 33)
+Where (d.Tip_Dok In ( 14, 15, 203, 204, 99, 301, 402, 61, 60 ) or d.vrsta_Dok = 33)
+  And d.Status > 0
+  And d.Org_Deo In (Select Magacin From Partner_magacin_Flag, Poslovni_Partner pp
+                    Where pp.sifra = Partner_magacin_Flag.ppartner
+                    )
+  And d.Datum_Dok Between To_Date('01.01.'||To_Char( &dNaDan, 'yyyy' ),'dd.mm.yyyy') And &dNaDan
+  And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+
+  And sd.K_Robe != 0
+  and d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+  And sd.Proizvod = p.Sifra And d.ppartner = pp.sifra and Obl.Id = pp.Teren
+
+Group By pp.teren, obl.naziv, pp.sifra, pp.naziv, sd.Proizvod, P.Naziv, P.Jed_Mere
+Order By pp.teren, pp.naziv, P.Naziv
+)
+order by to_number(sifra), PROIZVOD
+"REM WORKSPACETAB4",Query6,,2
+select * from PS_Ambalaze
+where godina = 2015
+"REM WORKSPACETAB5","Pusti PS",,2
+exec         PPSAmbalaze.GenerisiPSAmbalaze;
+
+"REM WORKSPACETAB6","Pogledaj PS",,12
+select sd.rowid, d.VRSTA_DOK,d.BROJ_DOK,d.GODINA, d.org_deo, d.ppartner, PPoslovniPartner.naziv(d.ppartner) prt_naz
+     , sd.proizvod, pproizvod.naziv(sd.proizvod) pro_naz, kolicina, cena
+from
+    stavka_dok sd
+   , dokument d
+where d.godina = 2015
+  and d.vrsta_Dok = '21'
+  and d.org_Deo in  (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+
+and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+
+Order by to_number(d.ppartner)
+"REM WORKSPACETAB7",Query7,,4
+select * from dokument d
+where d.godina = 2015
+  and d.vrsta_Dok = '21'
+  and d.org_Deo in  (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)

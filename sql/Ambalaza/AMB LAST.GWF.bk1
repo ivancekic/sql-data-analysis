@@ -1,0 +1,1832 @@
+"REM WORKSPACETAB0",Query1,,9
+SELECT *
+                                  FROM MAPIRANJE
+                                  Where firma = UPPER('INVEJ')
+                                    And MODUL = 'MAGACIN'
+--                                    And upper(UL02)  = upper('INVEJ')
+--                                    And Ul03 IN ( cMagacin  , '-9876' )
+--                                    And UL01 in ( cVrstaDok , '-9876' )
+                                    And upper(UL04)  = 'DA'
+--                                    And UL05         = cDugme
+"REM WORKSPACETAB1",Query2,,3
+Select length('Making applications in Oracle 10 PL/SQL and Oracle Forms, Reports(4.5,6i) for management material as material for sales and distribution, purchase, production, planning (sales, purchase and production).
+Educations of workers how to use our application.')
+from dual
+"REM WORKSPACETAB2",Dok_st_dok5.sql,,165
+select
+Sd.ROWID , --pjedmere.naziv(sd.proizvod) jm,
+--pproizvod.naziv(sd.proizvod) ,
+--SD.BROJ_DOK,
+--D.org_deo, d.poslovnica,  d.vrsta_izjave,
+--sd.proizvod, SD.porez
+--,sd.cena,sd.cena1
+--,Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+--,sd.stavka
+--d.rowid, d.vrsta_izjave,d.org_deo, d.broj_dok1, sd.*
+--D.ROWID,-- D.*,
+--sd.jed_mere, p.jed_mere,
+--d.status, d.datum_dok, D.ORG_DEO, D.BROJ_DOK1,
+d.*,
+--Z.*
+
+SD.*
+--, sd.kolicina*158.84 za_akc
+
+--D.DATUM_dOK, SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.KOLICINA,SD.CENA,SD.CENA1
+--, sd.cena * (1-sd.rabat/100)
+----,Obracunaj_JUS(sd.proizvod, sd.neto_kg, sd.proc_vlage, sd.proc_necistoce,nvl(sd.htl,0))
+----, (sd.kolicina * 2) z_t_osn, round((sd.kolicina * 2 * 1.18),2) z_t_uk
+--, OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, 1, sd.valuta,0) odgov
+------, PProdajniCenovnikGrKup.Cena ('GKNEU', sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) neu
+--,PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+--,PPlanskiCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) Plan
+----, Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+--,Kolicina * Faktor * 100 / Kolicina_Kontrolna jacina
+--d.tip_dok,pproizvod.naziv(sd.proizvod),--sd.*
+--sd.proizvod , pproizvod.naziv(sd.proizvod),sum (sd.kolicina * sd.faktor * sd.k_robe)
+--,d.status,sd.kolicina, sd.realizovano
+
+--, ZALIHE Z
+--, KOLICINA kol,SD.JED_MERE jm, SD.FAKTOR fak
+--
+--, P.JED_MERE sjm, P.PRODAJNA_JM, FAKTOR_PRODAJNE fpr
+--, p.naziv
+--    , (select sp1.stopa from savezni_porez sp1
+--       where sp1.Datum = ( Select Max( sp2.Datum )
+--                           From Savezni_Porez sp2
+--                           Where sp2.Grupa_Poreza = p.Grupa_Poreza
+--                             And sp2.Datum <= d.Datum_dok )
+--         and sp1.Grupa_Poreza = p.Grupa_Poreza
+--       ) sp_stopa
+
+--, ROUND(PKurs.Vrednost( SD.CENA, 'EUR', 'YUD', D.Datum_Dok,'S' ),4) CENA_K
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+
+
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+--  AND D.VRSTA_DOK IN ('73','74')
+--  AND (
+----        (D.BROJ_DOK  in('964') AND d.vrsta_Dok in ('3') )
+----      OR
+--        (D.BROJ_DOK  in('74') AND d.vrsta_Dok in ('10') )
+----      OR
+----        (D.BROJ_DOK  in('1994') AND d.vrsta_Dok in ('11') )
+--      )
+
+
+
+--  and org_Deo = 1376
+--  and k_robe <> 0
+--  AND D.DATUM_DOK = TO_DATE('01.01.2013','DD.MM.YYYY')
+--  AND PPARTNER= 5324
+
+--AND D.STATUS = 0
+
+
+--  and sd.proizvod 	= '22944'
+
+--and sd.proizvod IN ('7664')
+--  AND TIP_DOK = 165
+--  AND D.ORG_DEO = 269
+
+--  and d.datum_dok between to_date('05.02.2011','dd.mm.yyyy') and to_date('09.02.2011','dd.mm.yyyy')
+--  and d.datum_dok > to_date('24.01.2013','dd.mm.yyyy')
+--  and sd.valuta is null
+--  and d.ppartner= 2965
+
+----and sd.faktor <> 1
+--  and SD.proizvod in (3764)
+--  and SD.proizvod IN (
+--							  Select SIFRA from proizvod
+--							where tip_proizvoda = 1
+--							  and '%'||upper(naziv)||'%' like '%MARG%'
+--                     )
+----and sd.kolicina <> sd.realizovano
+--  and (k_robe <>0 or d.vrsta_Dok = 80)
+--and      d.vrsta_dok in ('11')
+--  and d.broj_dok = 19
+--and (
+----          ( d.VRSTA_DOK = 3 And d.BROJ_DOK in(6723)) --1351--
+--------      or
+--          ( d.VRSTA_DOK = 2 And d.BROJ_DOK in('868')) --1351--
+------
+--    )
+----
+----AND D.ORG_DEO = Z.ORG_dEO
+----AND SD.PROIZVOD = Z.PROIZVOD  (+)
+--
+----and proizvod in (select proizvod from stavka_dok
+----where godina = 2010
+---- and vrsta_dok = 3
+---- and broj_dok = 21028)
+--
+----  AND NVL ( SD.CENA , 0 ) <>  NVL ( SD.CENA1 , 0 )
+----
+----  and d.status >= 1
+----  and ( nvl(sd.cena1,0) <= 0 or nvl(sd.cena,0) <= 0 )
+----  and d.vrsta_dok  IN ( 1,26,45,46,
+----                        8,27,28,32 )
+----  and tip_dok = 23
+----  and sd.stavka = 1
+----  and d.broj_dok in (10)
+---- and d.broj_dok1 in (1595)
+----   AND SD.CENA <> 18
+---- PProdajniCenovnik.Cena( SD.Proizvod,D.Datum_Dok,SD.Valuta,SD.Faktor)
+--  and d.datum_dok > to_date('23.10.2011','dd.mm.yyyy')
+----  and sd.proizvod = 4465
+----AND D.VRSTA_DOK = 3
+----and d.status > 0
+----and sd.kolicina <> sd.realizovano
+----and k_robe <> 0
+----and nvl(sd.cena1,0) = 0
+--  and proizvod in ('6845','5304')
+----order by --to_number(sd.proizvod),
+------d.datum_dok ,
+----to_number(sd.broj_dok)
+----to_number(sd.proizvod)--,sd.stavka -- ,
+----
+------, d.broj_dok , stavka
+----ORDER BY TO_NUMBER(PROIZVOD),
+----         D.DATUM_UNOSA,
+----         TO_NUMBER(d.vrsta_dok),
+----         TO_NUMBER(d.BROJ_dok)
+----         --datum_dok--, stavka--
+----
+--and sd.stavka in (1,3)
+--
+--AND CENA1 IS NOT NULL
+--AND CENA1 <> OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, 1, sd.valuta,0)
+--and nvl(sd.proc_vlage) > 0
+order by
+--SD.PROIZVOD, d.datum_dok,
+d.datum_unosa;
+--ORDER BY STAVKA
+
+
+
+--393.76
+--393.76
+
+--388.73
+--388.73
+
+"REM WORKSPACETAB3",Query12,,23
+SELECT t.rowid, t.*
+FROM POTVRDA_DISPOZICIJE_T t
+WHERE (FIRMA,NAZIV_FIRME,DISPOZICIJA,VRSTA_DOK,BROJ_DOK,GODINA)
+IN(
+select
+
+
+
+--FIRMA,NAZIV_FIRME,DISPOZICIJA,VRSTA_DOK,BROJ_DOK,GODINA,TIP_DOK,TIP_DOK_NAZIV,DATUM_DOK,DATUM_UNOSA,USER_ID,PPARTNER,NAZIV_PARTNERA,PIB,STATUS,STATUS_NAZIV,ORG_DEO,ORG_DEO_NAZIV,MESTO_ISPORUKE,MESTO_ISPORUKE_NAZIV,PP_ISPORUKE,PP_ISPORUKE_NAZIV,BROJ_DOK1,OTPREMNICA,ADRESA,GOD_DISP,T_PRIJEM,T_UPISAN,F_PRIJEM,F_UPISAN,NALOG,F_IZNOS
+FIRMA,NAZIV_FIRME,DISPOZICIJA,VRSTA_DOK,BROJ_DOK,GODINA
+--, COUNT(*)
+from POTVRDA_DISPOZICIJE_T
+WHERE
+--      Dispozicija= 103287
+--  and
+      Dispozicija NOT IN ( '-1','0')
+
+--GROUP BY FIRMA,NAZIV_FIRME,DISPOZICIJA,VRSTA_DOK,BROJ_DOK,GODINA,TIP_DOK,TIP_DOK_NAZIV,DATUM_DOK,DATUM_UNOSA,USER_ID,PPARTNER,NAZIV_PARTNERA,PIB,STATUS,STATUS_NAZIV,ORG_DEO,ORG_DEO_NAZIV,MESTO_ISPORUKE,MESTO_ISPORUKE_NAZIV,PP_ISPORUKE,PP_ISPORUKE_NAZIV,BROJ_DOK1,OTPREMNICA,ADRESA,GOD_DISP,T_PRIJEM,T_UPISAN,F_PRIJEM,F_UPISAN,NALOG,F_IZNOS
+group by FIRMA,NAZIV_FIRME,DISPOZICIJA,VRSTA_DOK,BROJ_DOK,GODINA,to_number(broj_dok)
+having count(*) > 1
+)
+--and  aid = 121357
+order by firma, godina, to_number(broj_dok)
+"REM WORKSPACETAB4",Query13,,4
+SELECT t.rowid, t.*
+FROM POTVRDA_DISPOZICIJE_T t
+WHERE aid in ( 121357, 121355 )
+order by firma, godina, to_number(broj_dok)
+"REM WORKSPACETAB5",Query14,,1
+desc POTVRDA_DISPOZICIJE_MV
+"REM WORKSPACETAB6",Query15,,2
+select * from POTVRDA_DISPOZICIJE_MV
+where DISPOZICIJA='121355'
+"REM WORKSPACETAB7",Query16,,8
+Select OWNER,OBJECT_NAME,CREATED,LAST_DDL_TIME,OBJECT_TYPE
+from all_objects
+where
+instr(object_name,'KARTICA')>0
+AND
+instr(object_name,'AMBA')>0
+
+ORDER BY  LAST_DDL_TIME DESC
+"REM WORKSPACETAB8",Query17,,39
+select
+       d.VRSTA_DOK,d.BROJ_DOK,d.GODINA,d.TIP_DOK,d.status, d.org_deo, d.broj_dok1 brd1
+     , SD.proizvod, sd.kolicina,sd.faktor, sd.k_robe
+     , case when k_robe > 0 then
+             KOLICINA*K_ROBE
+       end ul
+
+     , case when k_robe < 0 then
+             KOLICINA*K_ROBE
+       end izl
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+  AND D.ORG_DEO = (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = '730')
+  and d.ppartner = '730'
+  and p.tip_proizvoda = '8'
+
+and KOLICINA*K_ROBE = -5
+order by
+SD.PROIZVOD,
+d.datum_dok,
+d.datum_unosa;
+--ORDER BY STAVKA
+
+
+
+--393.76
+--393.76
+
+--388.73
+--388.73
+
+"REM WORKSPACETAB9",Query28,,2
+Select * from partner_magacin_flag
+where ppartner = 730
+"REM WORKSPACETAB10",DOK,,32
+select
+d.datum_dok,
+        d.godina, d.vrsta_dok, d.broj_dok, d.org_deo, d.broj_dok1, d.status, D.TIP_DOK
+      , SD.proizvod
+--      , sd.kolicina, SD.FAKTOR, SD.K_ROBE
+     , case when k_robe > 0 then
+             SUM(KOLICINA*K_ROBE)
+       end ul
+
+     , case when k_robe < 0 then
+             SUM(KOLICINA*K_ROBE)
+       end izl
+
+from stavka_dok sd, dokument d
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+  AND D.ORG_DEO = (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = '730')
+  and d.ppartner = '730'
+  and SD.PROIZVOD = 399
+  and d.status > 0
+  AND D.DATUM_DOK BETWEEN TO_DATE('18.04.2013','DD.MM.YYYY') AND TO_DATE('19.04.2013','DD.MM.YYYY')
+
+gROUP BY        d.godina, d.vrsta_dok, d.broj_dok, d.org_deo, d.broj_dok1, d.status, D.TIP_DOK
+      , SD.proizvod,k_robe
+, d.datum_dok, d.datum_unosa
+
+Order by d.datum_dok, d.datum_unosa
+"REM WORKSPACETAB11",VEZNI,,24
+SELECT
+D.ORG_DEO MAG,D.BROJ_DOK1 BRD1,D.TIP_DOK TIP, D.DATUM_DOK DAT,
+VD.*,
+D1.ORG_DEO MAG_1,D1.BROJ_DOK1 BRD1_1,D1.TIP_DOK TIP_1, D1.DATUM_DOK DAT1
+FROM VEZNI_DOK VD, DOKUMENT D, DOKUMENT D1
+WHERE
+(
+
+  (D.GODINA = 2013  AND D.VRSTA_DOK='3'  AND D.BROJ_DOK = '8854')
+OR
+  (D.GODINA = 2013  AND D.VRSTA_DOK='5'  AND D.BROJ_DOK = '716')
+--OR
+--  (D.GODINA = 2013  AND D.VRSTA_DOK='11'  AND D.BROJ_DOK = '12660')
+OR
+  (D.GODINA = 2013  AND D.VRSTA_DOK='30'  AND D.BROJ_DOK = '21')
+
+)
+AND ZA_VRSTA_dOK NOT IN ('10')
+--AND D.TIP_DOK = 301
+AND d.godina = VD.godina and d.vrsta_dok = VD.vrsta_dok and d.broj_dok = VD.broj_dok
+AND D1.godina = VD.ZA_godina and D1.vrsta_dok = VD.ZA_vrsta_dok and D1.broj_dok = VD.ZA_broj_dok
+
+ORDER BY TO_NUMBER(D.VRSTA_DOK), TO_NUMBER(D.BROJ_DOK)
+
+"REM WORKSPACETAB12","NOVA KARTICA AMB",,200
+SELECT A.*
+
+     , D.ORG_DEO ROBNI_MAG, D.TIP_DOK ROBNI_TIP
+FROM
+(
+         Select SD.Proizvod,
+                D.Datum_Dok, D.Datum_Unosa,
+                D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+                D.Tip_Dok,
+                PPlanskiCenovnik.Cena(SD.Proizvod,
+                                      D.Datum_Dok,'YUD',1) PCena,
+
+                K_Robe, ( Sum ( Kolicina * Faktor ) ) Kolicina
+			     , case when k_robe > 0 then
+			             sum(KOLICINA*K_ROBE)
+			       end ul
+
+			     , case when k_robe < 0 then
+			             sum(KOLICINA*K_ROBE)
+			       end izl
+	     , (select count(*) ima_sve from USER_MAG_ZA_IZV um where um.user_id = user and MAGACIN =  -9876 And Prikazi = 1) sve_firme
+
+, CASE WHEN d.TIP_DOK = 204 and d.vrsta_dok='63' THEN
+            d.broj_dok
+  else
+       CASE WHEN D.VRSTA_DOK = '3' THEN
+           nvl(VD3_11.za_broj_dok,D.broj_Dok)
+       WHEN D.VRSTA_DOK = '4' THEN
+           VD4_3.za_broj_dok
+       WHEN D.VRSTA_DOK = '11' THEN
+           VD11_3.za_broj_dok
+       WHEN D.VRSTA_DOK = '12' THEN
+           VD12_4.za_broj_dok
+       WHEN D.VRSTA_DOK = '5' THEN
+           VD5_13.za_broj_dok
+       WHEN D.VRSTA_DOK = '30' THEN
+           VD30_31.za_broj_dok
+       WHEN D.VRSTA_DOK = '13' THEN
+           VD13_5.za_broj_dok
+       WHEN D.VRSTA_DOK = '31' THEN
+           VD31_30.za_broj_dok
+       WHEN D.VRSTA_DOK = '61' THEN
+           VD61_3.za_broj_dok
+       WHEN D.VRSTA_DOK = '63' THEN
+           VD63_3.za_broj_dok
+       WHEN D.VRSTA_DOK = '62' THEN
+           VD62_4.za_broj_dok
+       WHEN D.VRSTA_DOK = '64' THEN
+           VD64_4.za_broj_dok
+       end
+  end robni_brd
+
+, CASE WHEN d.TIP_DOK = 204 and d.vrsta_dok='63' THEN
+            d.vrsta_dok
+  else
+       CASE WHEN D.VRSTA_DOK = '3' THEN
+           nvl(VD3_11.za_vrsta_dok,D.Vrsta_Dok)
+       WHEN D.VRSTA_DOK = '4' THEN
+           VD4_3.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '11' THEN
+           VD11_3.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '12' THEN
+           VD12_4.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '5' THEN
+           VD5_13.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '30' THEN
+           VD30_31.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '13' THEN
+           VD13_5.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '31' THEN
+           VD31_30.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '61' THEN
+           VD61_3.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '63' THEN
+           VD63_3.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '62' THEN
+           VD62_4.za_vrsta_dok
+       WHEN D.VRSTA_DOK = '64' THEN
+           VD64_4.za_vrsta_dok
+       end
+  end robni_vrd
+
+
+, CASE WHEN d.TIP_DOK = 204 and d.vrsta_dok='63' THEN
+            d.godina
+  else
+       CASE WHEN D.VRSTA_DOK = '3' THEN
+           nvl(VD3_11.za_godina,D.godina)
+       WHEN D.VRSTA_DOK = '4' THEN
+           VD4_3.za_godina
+       WHEN D.VRSTA_DOK = '11' THEN
+           VD11_3.za_godina
+       WHEN D.VRSTA_DOK = '12' THEN
+           VD12_4.za_godina
+       WHEN D.VRSTA_DOK = '5' THEN
+           VD5_13.za_godina
+       WHEN D.VRSTA_DOK = '30' THEN
+           VD30_31.za_godina
+       WHEN D.VRSTA_DOK = '13' THEN
+           VD13_5.za_godina
+       WHEN D.VRSTA_DOK = '31' THEN
+           VD31_30.za_godina
+       WHEN D.VRSTA_DOK = '61' THEN
+           VD61_3.za_godina
+       WHEN D.VRSTA_DOK = '63' THEN
+           VD63_3.za_godina
+       WHEN D.VRSTA_DOK = '62' THEN
+           VD62_4.za_godina
+       WHEN D.VRSTA_DOK = '64' THEN
+           VD64_4.za_godina
+       end
+  end robni_god
+
+         From Dokument D, Stavka_Dok SD
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '3' and za_vrsta_dok='11') VD3_11
+             , (
+				   SELECT
+				          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+				        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+				   FROM VEZNI_DOK VD
+			 	      , VEZNI_DOK VD1
+			 	      , VEZNI_DOK VD2
+				   WHERE VD.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND
+				     VD.VRSTA_DOK = '4'
+				     AND VD.ZA_vrsta_dok='3'
+				     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK AND VD1.GODINA=VD.ZA_GODINA AND VD1.ZA_VRSTA_DOK= '11'
+				     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK AND VD2.GODINA=VD1.ZA_GODINA AND VD2.ZA_VRSTA_DOK= '12'
+               ) VD4_3
+
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '11'  and za_vrsta_dok='3') VD11_3
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '12'  and za_vrsta_dok='4') VD12_4
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '5'  and za_vrsta_dok='13') VD5_13
+             , (
+				   SELECT VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+				        , VD1.ZA_BROJ_DOK,VD1.ZA_VRSTA_DOK,VD1.ZA_GODINA
+				   FROM VEZNI_DOK VD, VEZNI_DOK VD1
+				   WHERE VD.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND
+				         VD.VRSTA_DOK = '30'
+				     AND VD.ZA_vrsta_dok='5'
+
+				     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK
+				     AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK
+				     AND VD1.GODINA=VD.ZA_GODINA
+				     AND VD1.ZA_VRSTA_DOK= '13'
+               ) VD30_31
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '13' and za_vrsta_dok='5') VD13_5
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '31' and za_vrsta_dok='30') VD31_30
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '61' and za_vrsta_dok='3') VD61_3
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '63' and za_vrsta_dok='3') VD63_3
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '62' and za_vrsta_dok='4') VD62_4
+             , (Select * from VEZNI_DOK where godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '64' and za_vrsta_dok='4') VD64_4
+         Where D.Vrsta_Dok = SD.Vrsta_Dok And
+               D.Broj_Dok = SD.Broj_Dok And
+               D.Godina = SD.Godina And
+               D.Status > 0 And
+   D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma AND
+--   D.DATUM_DOK BETWEEN TO_DATE('08.07.2013','DD.MM.YYYY') AND TO_DATE('08.07.2013','DD.MM.YYYY') AND
+               D.Org_Deo = 2005 And
+               SD.K_Robe != 0 And
+               SD.Proizvod Like NVL( '399', '%' )
+
+               and VD3_11.broj_dok (+) = d.broj_dok and VD3_11.vrsta_Dok (+) = d.vrsta_dok and VD3_11.godina (+) = d.godina
+               and VD4_3.broj_dok (+) = d.broj_dok and VD4_3.vrsta_Dok (+) = d.vrsta_dok and VD4_3.godina (+) = d.godina
+               and VD11_3.broj_dok (+) = d.broj_dok and VD11_3.vrsta_Dok (+) = d.vrsta_dok and VD11_3.godina (+) = d.godina
+               and VD12_4.broj_dok (+) = d.broj_dok and VD12_4.vrsta_Dok (+) = d.vrsta_dok and VD12_4.godina (+) = d.godina
+               and VD5_13.broj_dok (+) = d.broj_dok and VD5_13.vrsta_Dok (+) = d.vrsta_dok and VD5_13.godina (+) = d.godina
+               and VD30_31.broj_dok (+) = d.broj_dok and VD30_31.vrsta_Dok (+) = d.vrsta_dok and VD30_31.godina (+) = d.godina
+               and VD13_5.broj_dok (+) = d.broj_dok and VD13_5.vrsta_Dok (+) = d.vrsta_dok and VD13_5.godina (+) = d.godina
+               and VD31_30.broj_dok (+) = d.broj_dok and VD31_30.vrsta_Dok (+) = d.vrsta_dok and VD31_30.godina (+) = d.godina
+               and VD61_3.broj_dok (+) = d.broj_dok and VD61_3.vrsta_Dok (+) = d.vrsta_dok and VD61_3.godina (+) = d.godina
+               and VD63_3.broj_dok (+) = d.broj_dok and VD63_3.vrsta_Dok (+) = d.vrsta_dok and VD63_3.godina (+) = d.godina
+               and VD62_4.broj_dok (+) = d.broj_dok and VD62_4.vrsta_Dok (+) = d.vrsta_dok and VD62_4.godina (+) = d.godina
+               and VD64_4.broj_dok (+) = d.broj_dok and VD64_4.vrsta_Dok (+) = d.vrsta_dok and VD64_4.godina (+) = d.godina
+         Group By SD.Proizvod,d.broj_dok,
+                  D.Datum_Dok, D.Datum_Unosa,
+                  D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+                  D.Tip_Dok, Cena, K_Robe
+
+                  , VD3_11.za_broj_dok, VD3_11.za_vrsta_dok, VD3_11.za_godina
+                  , VD4_3.za_broj_dok, VD4_3.za_vrsta_dok, VD4_3.za_godina
+                  , VD11_3.za_broj_dok , VD11_3.za_vrsta_dok , VD11_3.za_godina
+                  , VD12_4.za_broj_dok , VD12_4.za_vrsta_dok , VD12_4.za_godina
+                  , VD5_13.za_broj_dok , VD5_13.za_vrsta_dok , VD5_13.za_godina
+                  , VD30_31.za_broj_dok , VD30_31.za_vrsta_dok , VD30_31.za_godina
+                  , VD13_5.za_broj_dok  , VD13_5.za_vrsta_dok  , VD13_5.za_godina
+                  , VD31_30.za_broj_dok , VD31_30.za_vrsta_dok , VD31_30.za_godina
+                  , VD61_3.za_broj_dok  , VD61_3.za_vrsta_dok  , VD61_3.za_godina
+                  , VD63_3.za_broj_dok  , VD63_3.za_vrsta_dok  , VD63_3.za_godina
+                  , VD62_4.za_broj_dok  , VD62_4.za_vrsta_dok  , VD62_4.za_godina
+                  , VD64_4.za_broj_dok, VD64_4.za_vrsta_dok, VD64_4.za_godina
+
+) A
+, DOKUMENT D
+WHERE D.GODINA (+)=ROBNI_GOD
+  AND D.VRSTA_DOK (+)=ROBNI_VRD
+  AND D.BROJ_DOK (+)=ROBNI_BRD
+Order By A.Proizvod,
+         A.Datum_Dok, A.Datum_Unosa,
+         A.Vrsta_Dok, A.Broj_Dok, A.Godina,
+         A.Tip_Dok, A.K_Robe;
+"REM WORKSPACETAB13",Query65,,1
+TO_DATE('18.04.2013','DD.MM.YYYY')
+"REM WORKSPACETAB14","mag kart",,182
+SELECT
+       A.PROIZVOD
+       ,A.DATUM_DOK,A.DATUM_UNOSA,A.VRSTA_DOK,A.BROJ_DOK,A.GODINA,A.TIP_DOK,A.PCENA,A.K_ROBE,
+       sum(Kolicina) Kolicina
+--     , a.sve_firme
+--     , D.ORG_DEO ROBNI_MAG, d.broj_dok1 robni_brd1, D.TIP_DOK ROBNI_TIP
+--     , nvl(d.pp_isporuke,d.ppartner) ppisp
+--     , d.mesto_isporuke misp
+     , case when k_robe > 0 then
+             sum(KOLICINA*K_ROBE)
+       end ul
+
+     , case when k_robe < 0 then
+             sum(KOLICINA*K_ROBE)
+       end izl
+
+FROM
+(
+         Select SD.Proizvod,
+                D.Datum_Dok, D.Datum_Unosa,
+                D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+                D.Tip_Dok,
+                PPlanskiCenovnik.Cena(SD.Proizvod,
+                                      D.Datum_Dok,'YUD',1) PCena,
+
+                K_Robe,
+                  ( Kolicina * Faktor ) Kolicina
+--			     , case when k_robe > 0 then
+--			             sum(KOLICINA*K_ROBE)
+--			       end ul
+--
+--			     , case when k_robe < 0 then
+--			             sum(KOLICINA*K_ROBE)
+--			       end izl
+--	     , (select count(*) ima_sve from USER_MAG_ZA_IZV um where um.user_id = user and MAGACIN =  -9876 And Prikazi = 1) sve_firme
+				 		, CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+						            d.broj_dok
+						  else
+				                    NVL(za_broj_dok, D.BROJ_DOK)
+						  end robni_brd
+				
+						, CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+						            d.vrsta_Dok
+						  else				                                    
+				                    NVL(za_VRSTA_dok, D.vrsta_Dok)				                    
+						  end robni_vrd
+				
+						, CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+						            d.godina
+						  else				                      
+				                    NVL(za_godina, D.godina)					                    
+						  end robni_god
+
+         From Dokument D, Stavka_Dok SD
+             , (
+                (
+
+		                Select vd.* from dokument d, VEZNI_DOK vd
+		                where d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY'))
+		                  and d.org_deo= &nMagacin
+		                  and d.status > 0
+		                  and D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma
+                          and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+                          and za_vrsta_Dok not in ('10')
+                          and
+                          (
+		                      (d.vrsta_dok = '3' and za_vrsta_dok='11')
+		--                   OR  FALI STORNO PRIJEMNICA idi dole na union
+		                   OR (d.vrsta_dok = '11'  and za_vrsta_dok='3')
+		                   OR (d.vrsta_dok = '12'  and za_vrsta_dok='4')
+		                   OR (d.vrsta_dok = '5'  and za_vrsta_dok='13')
+		--                   OR  FALI STORNO POV PO PRIJEMNICI idi dole na union
+		                   OR (d.vrsta_dok = '13'  and za_vrsta_dok='5')
+		                   OR (d.vrsta_dok = '31'  and za_vrsta_dok='30')
+		                   OR (d.vrsta_dok = '61'  and za_vrsta_dok='3')
+		                   OR (d.vrsta_dok = '63'  and za_vrsta_dok='3')
+		                   OR (d.vrsta_dok = '62'  and za_vrsta_dok='4')
+		                   OR (d.vrsta_dok = '64'  and za_vrsta_dok='4')
+
+                          )
+                )
+                union
+               -- STORNO POV PO PRIJEMNICI
+--               19.04.2013 00:00:00
+               (
+		                Select VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+				             , VD1.ZA_BROJ_DOK,VD1.ZA_VRSTA_DOK,VD1.ZA_GODINA
+				        from dokument d, VEZNI_DOK vd, VEZNI_DOK VD1
+		                where d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY'))
+		                  and d.org_deo= &nMagacin
+		                  and d.status > 0
+		                  and D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma
+                          and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+                          and vd.za_vrsta_Dok not in ('10')
+                          and d.vrsta_dok = '30' and vd.za_vrsta_dok='5'
+                          AND VD1.VRSTA_DOK= '5'
+                          AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK
+                          AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK
+                          AND VD1.GODINA=VD.ZA_GODINA
+                          AND VD1.ZA_VRSTA_DOK= '13'
+                )
+                union
+                -- STORNO PRIJEMNICA
+--                07.05.2013 00:00:00
+--                08.07.2013 00:00:00
+--                28.06.2013 00:00:00
+
+                (
+--				   SELECT
+--				          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+--				        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+--				   FROM VEZNI_DOK VD
+--			 	      , VEZNI_DOK VD1
+--			 	      , VEZNI_DOK VD2
+--				   WHERE VD.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND
+--				     VD.VRSTA_DOK = '4'
+--				     AND VD.ZA_vrsta_dok='3'
+--				     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK AND VD1.GODINA=VD.ZA_GODINA AND VD1.ZA_VRSTA_DOK= '11'
+--				     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK AND VD2.GODINA=VD1.ZA_GODINA AND VD2.ZA_VRSTA_DOK= '12'
+				   SELECT
+				          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+				        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+				   FROM DOKUMENT D
+				      , VEZNI_DOK VD
+			 	      , VEZNI_DOK VD1
+			 	      , VEZNI_DOK VD2
+				   WHERE d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY'))
+				     AND D.VRSTA_DOK = '4'
+	                 and d.org_deo= &nMagacin
+		             and d.status > 0
+		             and D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma
+		             and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+				     AND VD.ZA_vrsta_dok='3'
+				     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK AND VD1.GODINA=VD.ZA_GODINA AND VD1.ZA_VRSTA_DOK= '11'
+				     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK AND VD2.GODINA=VD1.ZA_GODINA AND VD2.ZA_VRSTA_DOK= '12'
+               )
+              ) VD
+			, (SELECT * FROM USER_MAG_ZA_IZV
+			   WHERE USER_ID = user
+			     and nvl(PRIKAZI,0) = 1
+			  ) UMI
+
+         Where
+               D.Status > 0 And
+               d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) and
+               D.Org_Deo = &nMagacin And
+               D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma AND
+               SD.Vrsta_Dok = D.Vrsta_Dok And SD.Broj_Dok = D.Broj_Dok And SD.Godina = D.Godina And
+               SD.K_Robe != 0 And
+               SD.Proizvod = NVL(&cProizvod,SD.PROIZVOD)
+               and VD.broj_dok (+) = d.broj_dok and VD.vrsta_Dok (+) = d.vrsta_dok and VD.godina (+) = d.godina
+               AND REPLACE(UMI.MAGACIN,-9876,D.ORG_DEO) = D.ORG_DEO
+
+) A
+, (SELECT * FROM DOKUMENT
+   WHERE D.Status > 0 And
+     AND 
+   ) D
+WHERE D.GODINA (+)=ROBNI_GOD
+  AND D.VRSTA_DOK (+)=ROBNI_VRD
+  AND D.BROJ_DOK (+)=ROBNI_BRD
+
+  and to_number(nvl(d.mesto_isporuke,0)) Between &cMispOd And &cMispDo
+
+
+Group By A.Proizvod, A.broj_dok,
+        A.Datum_Dok, A.Datum_Unosa,
+        A.Vrsta_Dok, A.Broj_Dok, A.Godina,
+        A.Tip_Dok,
+        A.K_Robe, A.PCENA
+--        , a.sve_firme
+        , D.ORG_DEO, d.broj_dok1, D.TIP_DOK
+        , nvl(d.pp_isporuke,d.ppartner)
+        , d.mesto_isporuke
+Order By
+--A.Proizvod,
+--         nvl(d.pp_isporuke,d.ppartner),
+--         d.mesto_isporuke,
+
+         A.Datum_Dok, A.Datum_Unosa
+--         , a.Vrsta_Dok, a.Broj_Dok, a.Godina, a.Tip_Dok, a.pCena, a.K_Robe
+;
+"REM WORKSPACETAB15","za STANJE MIsp",,187
+select
+NVL(PMestoIsporuke.Naziv(PPARTNER,d_mi),'Z NIJE DEF') misp_naz
+
+, teren, naziv_ter
+     , PPARTNER SIFRA
+     , naziv_partner
+     , Proizvod, pro_naziv
+     , JedMere
+     , d_mi mesto_isporuke
+
+     , sum(ulaz) ulaz,
+       sum(izlaz) izlaz,
+       sum(stanje) stanje
+
+     , sum(ulaz) * PPlanskiCenovnik.Cena(  Proizvod,&dDoDatuma, 'YUD', 1 ) ulaz_VR,
+       sum(izlaz) * PPlanskiCenovnik.Cena(  Proizvod,&dDoDatuma, 'YUD', 1 ) izlaz_VR,
+       sum(stanje) * PPlanskiCenovnik.Cena(  Proizvod,&dDoDatuma, 'YUD', 1 ) stanje_VR
+
+from
+(
+	SELECT
+	       teren, naziv_ter, naziv_partner, Proizvod, pro_naziv,
+	       JedMere,
+	       d.ppartner ,
+	       nvl(d.mesto_isporuke,'100000') d_mi,
+	       nvl(ulaz,0) ulaz,
+	       nvl(izlaz,0) izlaz,
+	       nvl(stanje,0) stanje
+
+
+	FROM
+	(
+	         Select PP.teren, OBL.NAZIV naziv_ter,
+	                pp.sifra, pp.naziv naziv_partner,
+	                SD.Proizvod, P.Naziv pro_naziv, p.Jed_Mere JedMere,
+	                PPlanskiCenovnik.Cena(SD.Proizvod,
+	                                      D.Datum_Dok,'YUD',1) PCena,
+
+	                case when k_robe > 0 then
+	                     nvl(KOLICINA * K_ROBE * faktor,0)
+	                end ulaz,
+	                case when k_robe < 0 then
+	                     nvl(KOLICINA * K_ROBE * faktor,0)
+	                end izlaz,
+	                nvl(Kolicina * Faktor * k_robe,0) stanje,
+                    mesto_isporuke,
+			 		CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+					            d.broj_dok
+					else
+			                    NVL(za_broj_dok, D.BROJ_DOK)
+					end robni_brd,
+
+					CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+					            d.vrsta_Dok
+					else
+			                    NVL(za_VRSTA_dok, D.vrsta_Dok)
+					end robni_vrd,
+
+					CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+					            d.godina
+					else
+			                    NVL(za_godina, D.godina)
+					end robni_god
+
+	         From Dokument D, Stavka_Dok SD
+	             , (
+	                (
+
+			                Select vd.* from dokument d, VEZNI_DOK vd
+			                where d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY'))
+ 		                      and d.org_deo In (Select Magacin From Partner_magacin_Flag pmf, Poslovni_Partner pp
+                                                Where PPartner Between &cPartnerOd And &cPartnerDo
+                                                  And Teren Between &nTerenOd And &nTerenDo
+                                                  And pmf.ppartner=pp.sifra
+                                               )
+			                  and d.status > 0
+			                  and D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma
+	                          and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+	                          and za_vrsta_Dok not in ('10')
+	                          and
+	                          (
+			                      (d.vrsta_dok = '3' and za_vrsta_dok='11')
+			--                   OR  FALI STORNO PRIJEMNICA idi dole na union
+			                   OR (d.vrsta_dok = '11'  and za_vrsta_dok='3')
+			                   OR (d.vrsta_dok = '12'  and za_vrsta_dok='4')
+			                   OR (d.vrsta_dok = '5'  and za_vrsta_dok='13')
+			--                   OR  FALI STORNO POV PO PRIJEMNICI idi dole na union
+			                   OR (d.vrsta_dok = '13'  and za_vrsta_dok='5')
+			                   OR (d.vrsta_dok = '31'  and za_vrsta_dok='30')
+			                   OR (d.vrsta_dok = '61'  and za_vrsta_dok='3')
+			                   OR (d.vrsta_dok = '63'  and za_vrsta_dok='3')
+			                   OR (d.vrsta_dok = '62'  and za_vrsta_dok='4')
+			                   OR (d.vrsta_dok = '64'  and za_vrsta_dok='4')
+
+	                          )
+	                )
+	                union
+	               -- STORNO POV PO PRIJEMNICI
+	--               19.04.2013 00:00:00
+	               (
+			                Select VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+					             , VD1.ZA_BROJ_DOK,VD1.ZA_VRSTA_DOK,VD1.ZA_GODINA
+					        from dokument d, VEZNI_DOK vd, VEZNI_DOK VD1
+			                where d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY'))
+ 		                      and d.org_deo In (Select Magacin From Partner_magacin_Flag pmf, Poslovni_Partner pp
+                                                Where PPartner Between &cPartnerOd And &cPartnerDo
+                                                  And Teren Between &nTerenOd And &nTerenDo
+                                                  And pmf.ppartner=pp.sifra
+                                               )
+			                  and d.status > 0
+			                  and D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma
+	                          and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+	                          and vd.za_vrsta_Dok not in ('10')
+	                          and d.vrsta_dok = '30' and vd.za_vrsta_dok='5'
+	                          AND VD1.VRSTA_DOK= '5'
+	                          AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK
+	                          AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK
+	                          AND VD1.GODINA=VD.ZA_GODINA
+	                          AND VD1.ZA_VRSTA_DOK= '13'
+	                )
+	                union
+	                -- STORNO PRIJEMNICA
+	--                07.05.2013 00:00:00
+	--                08.07.2013 00:00:00
+	--                28.06.2013 00:00:00
+	                (
+					   SELECT
+					          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+					        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+					   FROM DOKUMENT D
+					      , VEZNI_DOK VD
+				 	      , VEZNI_DOK VD1
+				 	      , VEZNI_DOK VD2
+					   WHERE d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY'))
+					     AND D.VRSTA_DOK = '4'
+		                 and d.org_deo In (Select Magacin From Partner_magacin_Flag pmf, Poslovni_Partner pp
+                                           Where PPartner Between &cPartnerOd And &cPartnerDo
+                                             And Teren Between &nTerenOd And &nTerenDo
+                                             And pmf.ppartner=pp.sifra
+                                          )
+			             and d.status > 0
+			             and D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma
+			             and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+					     AND VD.ZA_vrsta_dok='3'
+					     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK AND VD1.GODINA=VD.ZA_GODINA AND VD1.ZA_VRSTA_DOK= '11'
+					     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK AND VD2.GODINA=VD1.ZA_GODINA AND VD2.ZA_VRSTA_DOK= '12'
+	               )
+	              ) VD
+	            , POSLOVNI_PARTNER PP
+	            , OBLAST OBL
+	            , PROIZVOD P
+
+	         Where
+	               D.Status > 0 And
+	               d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) and
+	               D.Org_Deo in (select magacin from partner_magacin_flag where ppartner = &cPartnerOd) And
+	               D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma AND
+	               SD.Vrsta_Dok = D.Vrsta_Dok And SD.Broj_Dok = D.Broj_Dok And SD.Godina = D.Godina And
+	               SD.K_Robe != 0 And
+	               sd.Proizvod Between &cProizvodOd And &cProizvodDo
+	               and VD.broj_dok (+) = d.broj_dok and VD.vrsta_Dok (+) = d.vrsta_dok and VD.godina (+) = d.godina
+	               And d.Org_Deo In (Select Magacin From Partner_magacin_Flag, Poslovni_Partner pp
+	                                 Where PPartner Between &cPartnerOd And &cPartnerDo And Teren Between &nTerenOd And &nTerenDo )
+
+	               And d.ppartner = pp.sifra and Obl.Id = pp.Teren
+                   And PP.Teren Between &nTerenOd And &nTerenDo
+	               And sd.Proizvod = p.Sifra
+
+and d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+
+	) A
+	, DOKUMENT D
+
+	WHERE D.GODINA (+)=ROBNI_GOD
+	  And D.VRSTA_DOK (+)=ROBNI_VRD
+	  And D.BROJ_DOK (+)=ROBNI_BRD
+--	  And to_number(nvl(d.mesto_isporuke,0)) Between &cMispOd And &cMispDo
+
+)
+Group by teren, naziv_ter, PPARTNER, naziv_partner, Proizvod, pro_naziv,
+         JedMere
+       , d_mi
+
+
+Order By teren, naziv_partner
+       , NVL(PMestoIsporuke.Naziv(PPARTNER,d_mi),'Z NIJE DEF')
+       , pro_naziv;
+"REM WORKSPACETAB16","za STANJE MIsp V1",,178
+		select
+		--NVL(PMestoIsporuke.Naziv(PPARTNER,d_mi),'Z NIJE DEF') misp_naz
+		--,
+		teren, naziv_ter
+		     , PPARTNER SIFRA
+		     , naziv_partner
+		     , Proizvod, pro_naziv
+		     , JedMere
+		     , d_mi mesto_isporuke
+
+		     , sum(ulaz) ulaz,
+		       sum(izlaz) izlaz,
+		       sum(stanje) stanje
+		from
+		(
+			SELECT
+			       teren, naziv_ter, sifra, naziv_partner, Proizvod, pro_naziv,
+			       JedMere,
+			       d.ppartner ,
+			       nvl(d.mesto_isporuke,'100000') d_mi,
+			       nvl(ulaz,0) ulaz,
+			       nvl(izlaz,0) izlaz,
+			       nvl(stanje,0) stanje
+
+
+			FROM
+			(
+			         Select PP.teren, OBL.NAZIV naziv_ter,
+			                pp.sifra, pp.naziv naziv_partner,
+			                SD.Proizvod, P.Naziv pro_naziv, p.Jed_Mere JedMere,
+			                PPlanskiCenovnik.Cena(SD.Proizvod,
+			                                      D.Datum_Dok,'YUD',1) PCena,
+
+			                case when k_robe > 0 then
+			                     KOLICINA*K_ROBE*faktor
+			                end ulaz,
+			                case when k_robe < 0 then
+			                     KOLICINA*K_ROBE*faktor
+			                end izlaz,
+			                Kolicina * Faktor * k_robe stanje,
+		                    mesto_isporuke,
+					 		CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+							            d.broj_dok
+							else
+					                    NVL(za_broj_dok, D.BROJ_DOK)
+							end robni_brd,
+
+							CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+							            d.vrsta_Dok
+							else
+					                    NVL(za_VRSTA_dok, D.vrsta_Dok)
+							end robni_vrd,
+
+							CASE WHEN d.TIP_DOK IN (12,23,204) AND D.VRSTA_DOK != '63' THEN
+							            d.godina
+							else
+					                    NVL(za_godina, D.godina)
+							end robni_god
+
+			         From Dokument D, Stavka_Dok SD
+			             , (
+			                (
+
+					                Select vd.* from dokument d, VEZNI_DOK vd, poslovni_partner pp
+					                where d.godina =to_char(&dNaDan,'YYYY')
+ 			                          and PPartner Between &cPartnerOd And &cPartnerDo
+					                  and d.org_deo in (select magacin from partner_magacin_flag pmf where pmf.ppartner = d.ppartner)
+					                  and d.status > 0
+					                  and D.DATUM_DOK BETWEEN to_date('01.01.'||to_char(&dNaDan,'yyyy'),'dd.mm.yyyy') AND &dNaDan
+					                  and pp.sifra=d.ppartner
+			                          and Teren Between &nTerenOd And &nTerenDo
+			                          and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+			                          and za_vrsta_Dok not in ('10')
+			                          and
+			                          (
+					                      (d.vrsta_dok = '3' and za_vrsta_dok='11')
+					--                   OR  FALI STORNO PRIJEMNICA idi dole na union
+					                   OR (d.vrsta_dok = '11'  and za_vrsta_dok='3')
+					                   OR (d.vrsta_dok = '12'  and za_vrsta_dok='4')
+					                   OR (d.vrsta_dok = '5'  and za_vrsta_dok='13')
+					--                   OR  FALI STORNO POV PO PRIJEMNICI idi dole na union
+					                   OR (d.vrsta_dok = '13'  and za_vrsta_dok='5')
+					                   OR (d.vrsta_dok = '31'  and za_vrsta_dok='30')
+					                   OR (d.vrsta_dok = '61'  and za_vrsta_dok='3')
+					                   OR (d.vrsta_dok = '63'  and za_vrsta_dok='3')
+					                   OR (d.vrsta_dok = '62'  and za_vrsta_dok='4')
+					                   OR (d.vrsta_dok = '64'  and za_vrsta_dok='4')
+
+			                          )
+			                )
+			                union
+			               -- STORNO POV PO PRIJEMNICI
+			--               19.04.2013 00:00:00
+			               (
+					                Select VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+							             , VD1.ZA_BROJ_DOK,VD1.ZA_VRSTA_DOK,VD1.ZA_GODINA
+							        from dokument d, VEZNI_DOK vd, VEZNI_DOK VD1, poslovni_partner pp
+					                where d.godina =to_char(&dNaDan,'YYYY')
+			                          and PPartner Between &cPartnerOd And &cPartnerDo
+					                  and d.org_deo in (select magacin from partner_magacin_flag pmf where pmf.ppartner = d.ppartner)
+					                  and d.status > 0
+					                  and D.DATUM_DOK BETWEEN to_date('01.01.'||to_char(&dNaDan,'yyyy'),'dd.mm.yyyy') AND &dNaDan
+					                  and pp.sifra=d.ppartner
+			                          and Teren Between &nTerenOd And &nTerenDo
+			                          and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+			                          and vd.za_vrsta_Dok not in ('10')
+			                          and d.vrsta_dok = '30' and vd.za_vrsta_dok='5'
+			                          AND VD1.VRSTA_DOK= '5'
+			                          AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK
+			                          AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK
+			                          AND VD1.GODINA=VD.ZA_GODINA
+			                          AND VD1.ZA_VRSTA_DOK= '13'
+			                )
+			                union
+			                -- STORNO PRIJEMNICA
+			--                07.05.2013 00:00:00
+			--                08.07.2013 00:00:00
+			--                28.06.2013 00:00:00
+			                (
+							   SELECT
+							          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+							        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+							   FROM DOKUMENT D
+							      , VEZNI_DOK VD
+						 	      , VEZNI_DOK VD1
+						 	      , VEZNI_DOK VD2
+						 	      , poslovni_partner pp
+							   WHERE d.godina =to_char(&dNaDan,'YYYY')
+							     AND D.VRSTA_DOK = '4'
+			                     and PPartner Between &cPartnerOd And &cPartnerDo
+	                             and Teren Between &nTerenOd And &nTerenDo
+				                 and d.org_deo in (select magacin from partner_magacin_flag pmf where pmf.ppartner = d.ppartner)
+					             and d.status > 0
+					             and D.DATUM_DOK BETWEEN to_date('01.01.'||to_char(&dNaDan,'yyyy'),'dd.mm.yyyy') AND &dNaDan
+					             and pp.sifra=d.ppartner
+			                     and Teren Between &nTerenOd And &nTerenDo
+					             and VD.broj_dok = d.broj_dok and VD.vrsta_Dok = d.vrsta_dok and VD.godina = d.godina
+							     AND VD.ZA_vrsta_dok='3'
+							     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK AND VD1.GODINA=VD.ZA_GODINA AND VD1.ZA_VRSTA_DOK= '11'
+							     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK AND VD2.GODINA=VD1.ZA_GODINA AND VD2.ZA_VRSTA_DOK= '12'
+			               )
+			              ) VD
+			            , POSLOVNI_PARTNER PP
+			            , OBLAST OBL
+			            , PROIZVOD P
+
+			         Where
+			               D.Status > 0 And
+			               d.godina =to_char(&dNaDan,'YYYY') and
+		                   d.org_deo in (select magacin from partner_magacin_flag pmf where pmf.ppartner = d.ppartner) and
+			               D.DATUM_DOK BETWEEN to_date('01.01.'||to_char(&dNaDan,'yyyy'),'dd.mm.yyyy') AND &dNaDan AND
+			               PPartner Between &cPartnerOd And &cPartnerDo And
+			               Teren Between &nTerenOd And &nTerenDo And
+			               SD.Vrsta_Dok = D.Vrsta_Dok And SD.Broj_Dok = D.Broj_Dok And SD.Godina = D.Godina And
+
+			               SD.K_Robe != 0 And
+			               sd.Proizvod Between &cProizvodOd And &cProizvodDo and
+			               VD.broj_dok (+) = d.broj_dok and VD.vrsta_Dok (+) = d.vrsta_dok and VD.godina (+) = d.godina And
+
+			               d.ppartner = pp.sifra and Obl.Id = pp.Teren And
+			               sd.Proizvod = p.Sifra
+
+			) A
+			, DOKUMENT D
+
+			WHERE D.GODINA (+)=ROBNI_GOD
+			  And D.VRSTA_DOK (+)=ROBNI_VRD
+			  And D.BROJ_DOK (+)=ROBNI_BRD
+
+		)
+		Group by teren, naziv_ter, PPARTNER, naziv_partner, Proizvod, pro_naziv,
+		         JedMere
+		       , d_mi
+
+
+		Order By teren, naziv_partner
+		, NVL(PMestoIsporuke.Naziv(PPARTNER,d_mi),'Z NIJE DEF')
+		, pro_naziv;
+"REM WORKSPACETAB17",StanjeAmbMisp,,144
+
+declare
+   Cursor TerPartnProizv_cur is
+     Select teren, naziv_ter, sifra, naziv_partner, Proizvod, pro_naziv,
+            sum(Ulaz) ulaz, sum(Izlaz) izlaz, sum(Stanje) stanje, JedMere, mesto_isporuke
+     From
+     (
+         Select pp.teren, obl.naziv naziv_ter, pp.sifra, pp.naziv naziv_partner,
+                d.Godina, d.vrsta_dok, d.broj_dok, d.tip_dok, sd.Proizvod, P.Naziv pro_naziv,
+	            ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+	            ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+	            ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje, p.Jed_Mere JedMere,
+	            (case when Tip_dok != 204 Then
+ 	                  (case when d.vrsta_dok = '3' Then -- za prijemnicu -- trazi otpremnicu
+                            decode((Select d1.mesto_isporuke
+                                    From vezni_dok vd, dokument d1
+                                    where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                                      And vd.za_Vrsta_dok = '11'
+                                      and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                                      and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                                    ),NULL,(Select d4.Mesto_Isporuke From Vezni_dok vd4, dokument d4
+                                            Where d4.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                                              and vd4.godina = d.godina and vd4.vrsta_dok = d.vrsta_dok and vd4.broj_dok = d.broj_dok
+                                              and d4.Vrsta_Dok = vd4.za_Vrsta_Dok And d4.Broj_Dok = vd4.za_Broj_Dok And d4.Godina = vd4.za_Godina
+                                              and vd4.za_Vrsta_Dok = '61'
+                                            )
+                                    ,(Select d1.mesto_isporuke
+                                      From vezni_dok vd, dokument d1
+                                      where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                                        and vd.za_Vrsta_dok = '11'
+                                        and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                                        and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                                     )
+
+                            )
+                            when d.Vrsta_Dok = '4' Then -- za storno prijemnicu
+                            (select d2.mesto_isporuke
+                             from vezni_dok vd, vezni_dok vd1,vezni_dok vd2, dokument d2
+                             Where d2.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                               and vd.za_vrsta_dok = '3'
+                               and vd.godina = d.godina and vd.vrsta_dok = d.vrsta_dok and vd.broj_dok = d.broj_dok
+                               and vd1.za_vrsta_dok = '11'
+                               and vd.za_godina = vd1.godina and vd.za_vrsta_dok = vd1.vrsta_dok and vd.za_broj_dok = vd1.broj_dok
+                               and vd2.za_vrsta_dok = '12'
+                               and vd2.godina = vd1.za_godina and vd2.vrsta_dok = vd1.za_vrsta_dok and vd2.broj_dok = vd1.za_broj_dok
+                               and d2.godina = vd2.za_godina and d2.vrsta_dok = vd2.za_vrsta_dok and d2.broj_dok = vd2.za_broj_dok
+                            )
+                            when d.vrsta_dok = '11' Then -- za otpremnicu -- trazi prijemnicu
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                               and vd.za_Vrsta_dok = '3'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                             )
+                            when d.vrsta_dok = '12' Then -- za storno otpremnicu -- trazi storno prijemnicu
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                               and vd.za_Vrsta_dok = '4'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '5' Then -- za povratnicu po prijemnici -- trazi povratnicu po otpremnici
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                               and vd.za_Vrsta_dok = '13'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '30' Then -- za storno povratnicu po prijemnici -- trazi storno povratnicu po otpremnici
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                               and vd.za_Vrsta_dok = '31'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '13' Then -- za povratnicu po otpremnici -- trazi povratnicu po prijemnici
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where d1.Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+                               and vd.za_Vrsta_dok = '5'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '31' Then -- za storno povratnicu po otpremnici -- trazi storno povratnicu po prijemnici
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where vd.za_Vrsta_dok = '30'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '61' Then -- za otpremnicu -- trazi prijemnicu
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where vd.za_Vrsta_dok = '3'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '63' Then -- za otpremnicu -- trazi prijemnicu
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where vd.za_Vrsta_dok = '3'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '62' Then -- za storno otpremnicu -- trazi storno prijemnicu
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where vd.za_Vrsta_dok = '4'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+                            when d.vrsta_dok = '64' Then -- za storno otpremnicu -- trazi storno prijemnicu
+                            (select d1.mesto_isporuke From vezni_dok vd, dokument d1
+                             where vd.za_Vrsta_dok = '4'
+                               and d.vrsta_dok = vd.Vrsta_Dok And d.broj_dok = vd.Broj_Dok And d.Godina = vd.Godina
+                               and d1.Vrsta_Dok = vd.za_Vrsta_Dok And d1.Broj_Dok = vd.za_Broj_Dok And d1.Godina = vd.za_Godina
+                            )
+	                   End
+	                   )
+	        else
+	           Mesto_isporuke
+	        End) mesto_isporuke
+         From Dokument d, Stavka_Dok sd, Proizvod p, Poslovni_partner pp, Oblast Obl
+         Where d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+           And d.Status > 0
+           And d.Org_Deo In (Select Magacin From Partner_magacin_Flag, Poslovni_Partner pp
+                             Where PPartner Between &cPartnerOd And &cPartnerDo And Teren Between &nTerenOd And &nTerenDo )
+           And d.Datum_Dok Between To_Date('01.01.'||To_Char( &dNaDan, 'yyyy' ),'dd.mm.yyyy') And &dNaDan
+           And Teren Between &nTerenOd And &nTerenDo
+           And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+           And sd.Proizvod Between &cProizvodOd And &cProizvodDo And sd.K_Robe != 0
+           and d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+           And sd.Proizvod = p.Sifra And d.ppartner = pp.sifra and Obl.Id = pp.Teren
+         Group By pp.teren, obl.naziv, pp.sifra, pp.naziv, d.Godina, d.vrsta_dok, d.broj_dok, d.tip_dok, sd.Proizvod, P.Naziv, Mesto_isporuke, P.Jed_Mere
+         )
+         Where Mesto_Isporuke Between &cMestoIspOd And &cMestoIspDo
+         Group By teren, naziv_ter, sifra, naziv_partner, Proizvod, pro_naziv,  JedMere, mesto_isporuke
+         Order By teren, naziv_partner, PMestoIsporuke.Naziv(sifra,mesto_isporuke), pro_naziv;
+  TerPartnProizv TerPartnProizv_cur % Rowtype;
+Begin
+         Open TerPartnProizv_cur;
+         Loop
+	     Fetch TerPartnProizv_cur Into TerPartnProizv;
+         Exit When TerPartnProizv_cur % NotFound;
+null;
+         End Loop;
+         Close TerPartnProizv_cur;
+
+End;
+"REM WORKSPACETAB18",Query69,,22
+SELECT
+vd.*
+,
+d.tip_dok
+,
+D.status
+, d.org_deo, d.broj_dok1
+
+FROM
+
+
+VEZNI_DOK vd
+,
+dokument  d
+WHERE vd.godina = 2013
+  and (
+         ( vd.VRSTA_DOK = '9' )
+      )
+  and vd.za_vrsta_dok='11'
+  and d.godina = vd.za_godina and d.vrsta_dok = vd.za_vrsta_dok and d.broj_dok = vd.za_broj_dok
+order by to_Number(vd.za_broj_dok)
+
+"REM WORKSPACETAB19","MAG PROVERA",,40
+select
+       SD.PROIZVOD
+       ,D.DATUM_DOK,D.DATUM_UNOSA,D.VRSTA_DOK,D.BROJ_DOK,D.GODINA,D.TIP_DOK,SD.K_ROBE
+--     , SUM(SD.KOLICINA*FAKTOR) KOLICINA
+--     , nvl(d.pp_isporuke,d.ppartner) PPISP
+--     , d.mesto_isporuke MISP
+     , case when k_robe > 0 then
+             sum(KOLICINA*K_ROBE)
+       end ul
+
+     , case when k_robe < 0 then
+             sum(KOLICINA*K_ROBE)
+       end izl
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+  AND D.ORG_DEO = (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = '730')
+  and d.ppartner = '730'
+  and p.tip_proizvoda = '8'
+  and d.status > 0
+  AND D.DATUM_DOK BETWEEN TO_DATE('01.01.2013','DD.MM.YYYY') AND TO_DATE('30.04.2013','DD.MM.YYYY')
+
+group by SD.PROIZVOD, k_robe
+,D.DATUM_DOK,D.DATUM_UNOSA,D.VRSTA_DOK,D.BROJ_DOK,D.GODINA,D.TIP_DOK
+     , nvl(d.pp_isporuke,d.ppartner)
+     , d.mesto_isporuke
+Order By
+--         SD.Proizvod,
+--         nvl(d.pp_isporuke,d.ppartner),
+--         d.mesto_isporuke,
+
+         D.Datum_Dok, D.Datum_Unosa
+--         , D.Vrsta_Dok, D.Broj_Dok, D.Godina, D.Tip_Dok, SD.K_Robe
+"REM WORKSPACETAB20",Query63,,28
+select
+--        D.VRSTA_DOK,D.BROJ_DOK,D.GODINA,D.TIP_DOK,sd.proizvod, sd.kolicina, sd.realizovano, SD.K_ROBE
+d.*
+,
+sd.*
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+  AND D.ORG_DEO = (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = '730')
+  and d.ppartner = '730'
+  and p.tip_proizvoda = '8'
+  and d.status > 0
+  AND D.DATUM_DOK BETWEEN TO_DATE('25.04.2013','DD.MM.YYYY') AND TO_DATE('25.04.2013','DD.MM.YYYY')
+
+Order By
+--         SD.Proizvod,
+--         nvl(d.pp_isporuke,d.ppartner),
+--         d.mesto_isporuke,
+
+         D.Datum_Dok, D.Datum_Unosa
+--         , D.Vrsta_Dok, D.Broj_Dok, D.Godina, D.Tip_Dok, SD.K_Robe
+"REM WORKSPACETAB21",Query64,,4
+Select * from vezni_dok
+where godina = 2013
+  and vrsta_dok='3'
+  and broj_dok in ('10871','10979','10870')
+"REM WORKSPACETAB22",Query62,,125
+SELECT
+       A.PROIZVOD
+     , case when k_robe > 0 then
+             sum(KOLICINA*K_ROBE)
+       end ul
+
+     , case when k_robe < 0 then
+             sum(KOLICINA*K_ROBE)
+       end izl
+
+FROM
+(
+         Select SD.Proizvod,
+                D.Datum_Dok, D.Datum_Unosa,
+                D.Vrsta_Dok, D.Broj_Dok, D.Godina,
+                D.Tip_Dok,
+                PPlanskiCenovnik.Cena(SD.Proizvod,
+                                      D.Datum_Dok,'YUD',1) PCena,
+
+                K_Robe,
+                  ( Kolicina * Faktor ) Kolicina
+--			     , case when k_robe > 0 then
+--			             sum(KOLICINA*K_ROBE)
+--			       end ul
+--
+--			     , case when k_robe < 0 then
+--			             sum(KOLICINA*K_ROBE)
+--			       end izl
+--	     , (select count(*) ima_sve from USER_MAG_ZA_IZV um where um.user_id = user and MAGACIN =  -9876 And Prikazi = 1) sve_firme
+
+		, CASE WHEN d.TIP_DOK IN (12,23,204) THEN
+		            d.broj_dok
+		  else
+                    za_broj_dok
+		  end robni_brd
+
+		, CASE WHEN d.TIP_DOK IN (12,23,204) THEN
+		            d.vrsta_Dok
+		  else
+                    za_VRSTA_dok
+		  end robni_vrd
+
+		, CASE WHEN d.TIP_DOK IN (12,23,204) THEN
+		            d.godina
+		  else
+                    za_godina
+		  end robni_god
+
+         From Dokument D, Stavka_Dok SD
+             , (
+                (
+                Select * from VEZNI_DOK
+                where
+                      (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '3' and za_vrsta_dok='11')
+--                   OR  FALI STORNO PRIJEMNICA idi dole na union
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '11'  and za_vrsta_dok='3')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '12'  and za_vrsta_dok='4')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '5'  and za_vrsta_dok='13')
+--                   OR  FALI STORNO POV PO PRIJEMNICI idi dole na union
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '13'  and za_vrsta_dok='5')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '31'  and za_vrsta_dok='30')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '61'  and za_vrsta_dok='3')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '63'  and za_vrsta_dok='3')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '62'  and za_vrsta_dok='4')
+                   OR (godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND vrsta_dok = '64'  and za_vrsta_dok='4')
+                )
+                union
+               -- STORNO POV PO PRIJEMNICI
+               (
+				   SELECT VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+				        , VD1.ZA_BROJ_DOK,VD1.ZA_VRSTA_DOK,VD1.ZA_GODINA
+				   FROM VEZNI_DOK VD, VEZNI_DOK VD1
+				   WHERE VD.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND
+				         VD.VRSTA_DOK = '30'
+				     AND VD.ZA_vrsta_dok='5'
+
+				     AND VD1.VRSTA_DOK= '5'
+				     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK
+				     AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK
+				     AND VD1.GODINA=VD.ZA_GODINA
+				     AND VD1.ZA_VRSTA_DOK= '13'
+                )
+                union
+                -- STORNO PRIJEMNICA
+                (
+				   SELECT
+				          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+				        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+				   FROM VEZNI_DOK VD
+			 	      , VEZNI_DOK VD1
+			 	      , VEZNI_DOK VD2
+				   WHERE VD.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) AND
+				     VD.VRSTA_DOK = '4'
+				     AND VD.ZA_vrsta_dok='3'
+				     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK AND VD1.GODINA=VD.ZA_GODINA AND VD1.ZA_VRSTA_DOK= '11'
+				     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK AND VD2.GODINA=VD1.ZA_GODINA AND VD2.ZA_VRSTA_DOK= '12'
+               )
+              ) VD
+			, (SELECT * FROM USER_MAG_ZA_IZV
+			   WHERE USER_ID = user
+			     and nvl(PRIKAZI,0) = 1
+			  ) UMI
+
+         Where
+               D.Status > 0 And
+               d.godina in (to_char(&dOdDatuma,'YYYY'), to_char(&dDoDatuma,'YYYY')) and
+               D.Org_Deo = &nMagacin And
+               D.DATUM_DOK BETWEEN &dOdDatuma AND &dDoDatuma AND
+               SD.Vrsta_Dok = D.Vrsta_Dok And SD.Broj_Dok = D.Broj_Dok And SD.Godina = D.Godina And
+               SD.K_Robe != 0 And
+               SD.Proizvod = NVL(&cProizvod,SD.PROIZVOD)
+               and VD.broj_dok (+) = d.broj_dok and VD.vrsta_Dok (+) = d.vrsta_dok and VD.godina (+) = d.godina
+               AND REPLACE(UMI.MAGACIN,-9876,D.ORG_DEO) = D.ORG_DEO
+
+) A
+, DOKUMENT D
+WHERE D.GODINA (+)=ROBNI_GOD
+  AND D.VRSTA_DOK (+)=ROBNI_VRD
+  AND D.BROJ_DOK (+)=ROBNI_BRD
+
+  and to_number(nvl(d.mesto_isporuke,0)) Between &cMispOd And &cMispDo
+
+
+Group By A.Proizvod, a.k_robe
+Order By A.Proizvod
+"REM WORKSPACETAB23","VEZNI NOVI ",,24
+	   SELECT
+
+	          VD.BROJ_DOK,VD.VRSTA_DOK,VD.GODINA
+	        , VD2.ZA_BROJ_DOK,VD2.ZA_VRSTA_DOK,VD2.ZA_GODINA
+
+	   FROM VEZNI_DOK VD
+ 	      , VEZNI_DOK VD1
+ 	      , VEZNI_DOK VD2
+
+	   WHERE VD.GODINA = 2013
+	     AND VD.VRSTA_DOK = '4'
+	     AND VD.BROJ_DOK='1902'
+	     AND VD.ZA_vrsta_dok='3'
+
+	     AND VD1.BROJ_DOK=VD.ZA_BROJ_DOK
+	     AND VD1.VRSTA_DOK=VD.ZA_VRSTA_DOK
+	     AND VD1.GODINA=VD.ZA_GODINA
+	     AND VD1.ZA_VRSTA_DOK= '11'
+
+
+	     AND VD2.BROJ_DOK=VD1.ZA_BROJ_DOK
+	     AND VD2.VRSTA_DOK=VD1.ZA_VRSTA_DOK
+	     AND VD2.GODINA=VD1.ZA_GODINA
+	     AND VD2.ZA_VRSTA_DOK= '12'
+"REM WORKSPACETAB24","DOKumenta sum",,25
+select
+       SD.proizvod
+     , case when k_robe > 0 then
+             sum(KOLICINA*K_ROBE)
+       end ul
+
+     , case when k_robe < 0 then
+             sum(KOLICINA*K_ROBE)
+       end izl
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+  AND D.ORG_DEO = (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = '730')
+  and d.ppartner = '730'
+  and p.tip_proizvoda = '8'
+  and d.status > 0
+  AND D.DATUM_DOK BETWEEN TO_DATE('01.01.2013','DD.MM.YYYY') AND TO_DATE('30.04.2013','DD.MM.YYYY')
+group by proizvod, k_robe
+"REM WORKSPACETAB25",distinct,,16
+--(d.Tip_Dok In ( 12,23,14,15, 203, 204, 99, 301, 402, 61, 60 )    or d.vrsta_Dok = 33)
+select
+distinct       d.VRSTA_DOK,d.TIP_DOK,d.org_deo
+
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and d.godina in (2013)
+  AND D.ORG_DEO = (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = '730')
+  and d.ppartner = '730'
+  and p.tip_proizvoda = '8'
+"REM WORKSPACETAB26","stanje amb",,36
+--101100
+         Select pp.teren, obl.naziv naziv_ter, pp.sifra, pp.naziv  naziv_partner, sd.Proizvod, P.Naziv pro_naziv,
+                ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+                ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+                ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje,
+                p.Jed_Mere JedMere
+--         From Dokument d, Stavka_Dok sd, Proizvod p, Poslovni_partner pp, Oblast Obl
+         From
+         (
+	         Select d.datum_dok, d.broj_dok, d.vrsta_dok, d.godina, d.tip_dok,d.org_deo, nvl(d.ppartner,&cPartnerOd) ppartner
+	         From Dokument d
+	         Where (d.Tip_Dok In ( 12,23,14,15, 203, 204, 99, 301, 402, 61, 60 )    or d.vrsta_Dok = 33)
+	         and d.status > 0
+	         and org_deo in (Select magacin from partner_magacin_flag m
+--	                         Where ppartner = &cPartnerOd)
+	                         Where m.ppartner = d.ppartner)
+
+         ) d
+
+         , Stavka_Dok sd, Proizvod p, Poslovni_partner pp, Oblast Obl
+--         Where d.Tip_Dok In ( 12,23,15, 203, 204, 99, 301, 402, 61, 60 )
+--           And d.Status > 0
+--           And
+           Where
+           d.Org_Deo In (Select Magacin From Partner_magacin_Flag, Poslovni_Partner pp
+                             Where PPartner Between &cPartnerOd  And &cPartnerDo
+                               And Teren Between &nTerenOd And &nTerenDo
+                             )
+           And d.Datum_Dok Between To_Date('01.01.'||To_Char( &dNaDan, 'yyyy' ),'dd.mm.yyyy') And &dNaDan
+           And Teren Between &nTerenOd And &nTerenDo
+           And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+           And sd.Proizvod Between &cProizvodOd And &cProizvodDo And sd.K_Robe != 0
+           and d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+           And sd.Proizvod = p.Sifra And d.ppartner = pp.sifra and Obl.Id = pp.Teren
+         Group By pp.teren, obl.naziv, pp.sifra, pp.naziv, sd.Proizvod, P.Naziv, P.Jed_Mere
+         Order By pp.teren, pp.naziv, P.Naziv;
+"REM WORKSPACETAB27","Kartica amb",,248
+--Select PROIZVOD,ORG_DEO,DATUM_DOK,DATUM_UNOSA,VRSTA_DOK,BROJ_DOK,GODINA,TIP_DOK,PCENA,K_ROBE,KOLICINA,BRD,VRD,GOD
+--     , mag, ppisp, misp, sve_firme
+--From
+--(
+--	Select PROIZVOD,ORG_DEO,DATUM_DOK,DATUM_UNOSA,VRSTA_DOK,BROJ_DOK,GODINA,TIP_DOK,PCENA,K_ROBE,KOLICINA,BRD,VRD,GOD
+--	     , (select org_deo from dokument d3 where d3.broj_dok = brd and d3.vrsta_dok = vrd and d3.godina = god ) mag
+--	     , (select nvl(pp_isporuke,ppartner) from dokument d3 where d3.broj_dok = brd and d3.vrsta_dok = vrd and d3.godina = god ) ppisp
+--	     , (select mesto_isporuke from dokument d3 where d3.broj_dok = brd and d3.vrsta_dok = vrd and d3.godina = god ) misp
+----					     , (select count(*) ima_sve from USER_MAG_ZA_IZV um where um.user_id = user and MAGACIN =  -9876) sve_firme
+--	     , (select count(*) ima_sve from USER_MAG_ZA_IZV um where um.user_id = user and MAGACIN =  -9876 And Prikazi = 1) sve_firme
+--	From
+--	(
+--		Select amb2.PROIZVOD,amb2.ORG_DEO,amb2.DATUM_DOK,amb2.DATUM_UNOSA,amb2.VRSTA_DOK,amb2.BROJ_DOK,amb2.GODINA,amb2.TIP_DOK,amb2.PCENA,amb2.K_ROBE,amb2.KOLICINA
+--			     , case when amb2.Vrsta_Dok != '4' Then
+--			       amb2.BRD
+--			       else
+--			          (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb2.brd And vd.vrsta_Dok = amb2.vrd and vd.godina = amb2.god and za_vrsta_dok = '12')
+--			       end brd
+--
+--			     , case when amb2.Vrsta_Dok != '4' Then
+--			       amb2.VRD
+--			       else
+--			          (select vd.za_vrsta_dok from vezni_dok vd where vd.broj_dok = amb2.brd And vd.vrsta_Dok = amb2.vrd and vd.godina = amb2.god and za_vrsta_dok = '12')
+--			       end  VRD
+--
+--			     , case when amb2.Vrsta_Dok != '4' Then
+--			       amb2.GOD
+--			       else
+--			          (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb2.brd And vd.vrsta_Dok = amb2.vrd and vd.godina = amb2.god and za_vrsta_dok = '12')
+--			       end GOD
+--
+--			From
+--
+--		(
+--			Select amb1.PROIZVOD,amb1.ORG_DEO,amb1.DATUM_DOK,amb1.DATUM_UNOSA,amb1.VRSTA_DOK,amb1.BROJ_DOK,amb1.GODINA,amb1.TIP_DOK,amb1.PCENA,amb1.K_ROBE,amb1.KOLICINA
+--			     , case when amb1.Vrsta_Dok != '4' Then
+--			       amb1.BRD
+--			       else
+--			          (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb1.brd And vd.vrsta_Dok = amb1.vrd and vd.godina = amb1.god and za_vrsta_dok = '11')
+--			       end brd
+--
+--			     , case when amb1.Vrsta_Dok != '4' Then
+--			       amb1.VRD
+--			       else
+--			          (select vd.za_vrsta_dok from vezni_dok vd where vd.broj_dok = amb1.brd And vd.vrsta_Dok = amb1.vrd and vd.godina = amb1.god and za_vrsta_dok = '11')
+--			       end  VRD
+--
+--			     , case when amb1.Vrsta_Dok != '4' Then
+--			       amb1.GOD
+--			       else
+--			          (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb1.brd And vd.vrsta_Dok = amb1.vrd and vd.godina = amb1.god and za_vrsta_dok = '11')
+--			       end GOD
+--
+--			From
+--			(
+
+				Select
+				amb.PROIZVOD,amb.ORG_DEO,amb.DATUM_DOK,amb.DATUM_UNOSA,amb.VRSTA_DOK,amb.BROJ_DOK,amb.GODINA,amb.TIP_DOK,amb.PCENA,amb.K_ROBE,amb.KOLICINA
+				,
+				                CASE WHEN amb.TIP_DOK in( 12, 23 ) THEN
+							                          amb.broj_dok
+				                     WHEN amb.TIP_DOK <> 204 THEN
+							         Case when amb.Vrsta_Dok = '3' Then -- za prijemnicu
+				                        NVL(
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '11')
+				                        ,
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '61')
+				                        )
+							         when amb.Vrsta_Dok = '4' Then -- za storno prijemnicu
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '11' Then -- za otpremnicu
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '12' Then -- za storno otpremnicu
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '4')
+							         when amb.Vrsta_Dok = '5' Then -- za povratnicu po prijemnici
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '13')
+							         when amb.Vrsta_Dok = '30' Then -- za storno povratnicu po prijemnici
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '31')
+							         when amb.Vrsta_Dok = '13' Then -- za povratnicu po otpremnici
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '5')
+							         when amb.Vrsta_Dok = '31' Then -- za storno povratnicu po otpremnici
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '30')
+							         when amb.Vrsta_Dok = '61' Then -- za otpremnicu
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '63' Then -- za otpremnicu
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '62' Then -- za storno otpremnicu
+				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '4')
+							         when amb.Vrsta_Dok = '64' Then -- za storno otpremnicu
+--				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '4')
+--				                        (select vd.za_broj_dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '63')
+										(select vd.za_broj_dok
+										 from vezni_dok vd
+										 where vd.broj_dok = (select vd.za_broj_dok from vezni_dok vd
+										                     where vd.broj_dok = amb.broj_dok
+										                       and vd.vrsta_Dok = amb.vrsta_dok
+										                       and vd.godina = amb.godina
+										                       and za_vrsta_dok = '63'
+										                    )
+										  and vd.vrsta_Dok = '63'
+										  and vd.godina = (select vd.godina from vezni_dok vd
+										                     where vd.broj_dok = amb.broj_dok
+										                       and vd.vrsta_Dok = amb.vrsta_dok
+										                       and vd.godina = amb.godina
+										                       and za_vrsta_dok = '63'
+										                    )
+										  and za_vrsta_dok = '3'
+										)
+							         END
+							     Else
+							         amb.broj_dok
+							     end brd
+				,
+--								                CASE WHEN amb.TIP_DOK <> 204 THEN
+				                CASE WHEN amb.TIP_DOK in( 12, 23 ) THEN
+							                          amb.vrsta_dok
+				                     WHEN amb.TIP_DOK <> 204 THEN
+							         Case when amb.Vrsta_Dok = '3' Then -- za prijemnicu
+--											         '11'
+                                                     nvl(
+                                                          (select vd.za_vrsta_Dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '11')
+                                                         ,
+                                                          (select vd.za_vrsta_Dok from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '61')
+                                                        )
+
+							         when amb.Vrsta_Dok = '4' Then -- za storno prijemnicu
+							         '3'
+							         when amb.Vrsta_Dok = '11' Then -- za otpremnicu
+							         '3'
+							         when amb.Vrsta_Dok = '12' Then -- za storno otpremnicu
+							         '4'
+							         when amb.Vrsta_Dok = '5' Then -- za povratnicu po prijemnici
+							         '13'
+							         when amb.Vrsta_Dok = '30' Then -- za storno povratnicu po prijemnici
+							         '31'
+							         when amb.Vrsta_Dok = '13' Then -- za povratnicu po otpremnici
+							         '5'
+							         when amb.Vrsta_Dok = '31' Then -- za storno povratnicu po otpremnici
+							         '30'
+							         when amb.Vrsta_Dok = '61' Then -- za otpremnicu
+							         '3'
+							         when amb.Vrsta_Dok = '63' Then -- za otpremnicu
+							         '3'
+							         when amb.Vrsta_Dok = '62' Then -- za storno otpremnicu
+							         '4'
+							         when amb.Vrsta_Dok = '64' Then -- za storno otpremnicu
+--							         '4'
+--							         '63'
+							         '3'
+							         END
+							     Else
+							         amb.vrsta_dok
+							     end vrd
+				,
+--								                CASE WHEN amb.TIP_DOK <> 204 THEN
+				                CASE WHEN amb.TIP_DOK in( 12, 23 ) THEN
+							                          amb.godina
+				                     WHEN amb.TIP_DOK <> 204 THEN
+							         Case when amb.Vrsta_Dok = '3' Then -- za prijemnicu
+							         NVL(
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '11')
+				                        ,
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '61')
+				                        )
+
+							         when amb.Vrsta_Dok = '4' Then -- za storno prijemnicu
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '11' Then -- za otpremnicu
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '12' Then -- za storno otpremnicu
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '4')
+							         when amb.Vrsta_Dok = '5' Then -- za povratnicu po prijemnici
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '13')
+							         when amb.Vrsta_Dok = '30' Then -- za storno povratnicu po prijemnici
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '31')
+							         when amb.Vrsta_Dok = '13' Then -- za povratnicu po otpremnici
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '5')
+							         when amb.Vrsta_Dok = '31' Then -- za storno povratnicu po otpremnici
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '30')
+							         when amb.Vrsta_Dok = '61' Then -- za otpremnicu
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '63' Then -- za otpremnicu
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '3')
+							         when amb.Vrsta_Dok = '62' Then -- za storno otpremnicu
+				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '4')
+							         when amb.Vrsta_Dok = '64' Then -- za storno otpremnicu
+--				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '4')
+--				                        (select vd.za_godina from vezni_dok vd where vd.broj_dok = amb.broj_dok And vd.vrsta_Dok = amb.vrsta_dok and vd.godina = amb.godina and za_vrsta_dok = '63')
+										(select vd.za_godina
+										 from vezni_dok vd
+										 where vd.broj_dok = (select vd.za_broj_dok from vezni_dok vd
+										                     where vd.broj_dok = amb.broj_dok
+										                       and vd.vrsta_Dok = amb.vrsta_dok
+										                       and vd.godina = amb.godina
+										                       and za_vrsta_dok = '63'
+										                    )
+										  and vd.vrsta_Dok = '63'
+										  and vd.godina = (select vd.godina from vezni_dok vd
+										                     where vd.broj_dok = amb.broj_dok
+										                       and vd.vrsta_Dok = amb.vrsta_dok
+										                       and vd.godina = amb.godina
+										                       and za_vrsta_dok = '63'
+										                    )
+										  and za_vrsta_dok = '3'
+										)
+
+							         END
+							     Else
+							         amb.godina
+							     end god
+				from
+				(
+
+				         Select sd.Proizvod, d.Org_Deo, d.Datum_Dok, d.Datum_Unosa, d.Vrsta_Dok, d.Broj_Dok, d.Godina, d.Tip_Dok
+				              , PPlanskiCenovnik.Cena(sd.Proizvod, d.Datum_Dok, 'YUD', 1) PCena, K_Robe, ( Sum ( Kolicina * Faktor ) ) Kolicina
+
+				         From Dokument d, Stavka_Dok sd
+--				         Where d.Status > 0 And d.Org_Deo = &nMagacin And d.Datum_Dok Between &dOdDatuma And &dDoDatuma
+
+				         Where d.Status > 0 And d.Org_Deo = &nMagacin And d.Datum_Dok Between &dOdDatuma And &dDoDatuma
+
+
+				           And d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+				           And sd.K_Robe != 0
+				           And sd.Proizvod Like NVL( &cProizvod, '%' )
+				         Group By sd.Proizvod,  D.ORG_dEO, d.Datum_Dok, d.Datum_Unosa, d.Vrsta_Dok, d.Broj_Dok, d.Godina, d.Tip_Dok, Cena, K_Robe
+				) amb
+--			)amb1
+--		) amb2
+--	) amb3
+--)
+--where (mag
+--        in (Select MAGACIN From USER_MAG_ZA_IZV
+--                  Where USER_ID = user
+--                   and nvl(PRIKAZI,0) = 1
+--                         -- dodato
+--                   and magacin <> -9876 AND MAGACIN = MAG
+--                         -- dodato
+--                 )
+--                   or (sve_firme>0 and mag between 1 and 999999)
+--
+--                   OR MAG IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG WHERE PPARTNER = &cPartnerOd )
+--                  )
+--        and nvl(misp,0) Between &cMispOd And &cMispDo
+--Order By Proizvod
+--             , to_number(ppisp)
+--             , to_number(misp)
+--       , Datum_Dok, Datum_Unosa,Vrsta_Dok, Broj_Dok, Godina, Tip_Dok, pCena, K_Robe;
+"REM WORKSPACETAB28","T_PrijemDispozicija CURSOR dok.sql",,31
+    select
+          mv.FIRMA, mv.NAZIV_FIRME, mv.DISPOZICIJA, mv.VRSTA_DOK, mv.BROJ_DOK, mv.GODINA, mv.TIP_DOK
+        , 'NULL' TIP_DOK_NAZIV, mv.DATUM_DOK, mv.DATUM_UNOSA, mv.USER_ID, mv.PPARTNER, mv.NAZIV_PARTNERA, mv.PIB, mv.STATUS
+        , 'NULL' STATUS_NAZIV, mv.ORG_DEO, mv.ORG_DEO_NAZIV, mv.MESTO_ISPORUKE, mv.MESTO_ISPORUKE_NAZIV, mv.PP_ISPORUKE
+        , mv.PP_ISPORUKE_NAZIV, mv.BROJ_DOK1, mv.OTPREMNICA, mv.ADRESA, mv.GOD_DISP, mv.T_PRIJEM, mv.T_UPISAN, mv.F_PRIJEM, mv.F_UPISAN, mv.NALOG
+        , db.IZ01 dblink
+
+    from POTVRDA_DISPOZICIJE_MV  mv
+       , POTVRDA_DISPOZICIJE_T  t
+       , MAPIRANJE db
+
+    where mv.firma     = t.firma (+)
+      and mv.vrsta_dok = t.vrsta_dok (+)
+      and mv.broj_dok  = t.broj_dok (+)
+      and mv.godina    = t.godina (+)
+      and mv.firma = to_number(db.UL01)
+      and db.IZ10 = 'IO' and db.MODUL= 'DB_LINKOVI' and to_number(db.UL01)>0
+
+      and nvl(t.firma, -98765) = -98765
+      
+--      DEJA 22.11.2012
+
+-- zbog toga sto je cursor DOK za INSERT
+-- uzimao i dokumenta otpreme po dispoziciji 
+-- koja su vec bila upisana u tabelu POTVRDA_DISPOZICIJE_T
+      and t.broj_dok is null
+
+--      DEJA 22.11.2012      
+
+      
+    order by mv.dispozicija desc

@@ -1,0 +1,784 @@
+"REM WORKSPACETAB0",Citaj_PS_AMB.sql,,6
+Select godina, count(*)
+from ps_ambalaze
+--where godina = 2010
+group by godina
+order by godina
+
+"REM WORKSPACETAB1",!!!za_PS_AMB.sql,,135
+-- PRVO PROVERI DA LI POSTOJE :: POCETNA STANJA U DOK I PS_AMBLAZE
+--  
+
+declare
+
+      dDatum Date;
+      nMagacin Number;
+      nGodina Number := 2010;
+      cBrojDok VarChar2(9);
+      nStavka Number;
+      nCena Number;
+      cJM VarChar2(3);
+      nKolicina Number;
+      nKRobe Number;
+
+
+      Cursor Partner_Cur( nGodina In Number ) IS
+         Select Distinct Partner
+         From PS_Ambalaze
+         Where Godina = nGodina
+         Order by to_number(Partner);
+
+      SlogPartner Partner_Cur % ROWTYPE;
+
+      Cursor Proizvod_Cur( cPartner In VarChar2, nGodina In Number ) IS
+         Select Proizvod, Ulaz, Izlaz
+         From PS_Ambalaze
+         Where Partner = cPartner And Godina = nGodina
+         Order By Proizvod;
+
+      SlogProizvod Proizvod_Cur % ROWTYPE;
+
+Begin
+  --PRVO SE NAPUNI POMOCNA TABLE ZA PS_AMBALAZE
+--  Insert into PS_AMBALAZE
+--  (
+--     Select nGodina, PPartner PRT, sd.Proizvod PRO
+--          , ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz
+--          , ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz
+--          --     , ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje
+--     From Dokument d, Stavka_Dok sd
+--     Where d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+--       And d.Status > 0
+--       And d.Org_Deo In (Select Magacin From Partner_magacin_Flag)
+--       And d.Datum_Dok Between nvl((Select Max(Datum_dok) from dokument where vrsta_dok = 21 and org_Deo = d.org_deo), to_date('01.01.0001','dd.mm.yyyy'))
+--       And to_date('31.12.'||To_Char(nGodina-1),'dd.mm.yyyy')--sysdate
+--       And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+--       And sd.K_Robe != 0
+----       and ppartner != 1
+--       And d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+--     Group By d.Ppartner, sd.Proizvod, d.Org_Deo
+--     );
+--     COMMIT;
+
+      dDatum := To_Date('01.01.'||To_Char(nGodina),'dd.mm.yyyy');
+
+      Open Partner_Cur( nGodina);
+      Loop
+      Fetch Partner_Cur Into SlogPartner;
+      Exit When Partner_Cur % NOTFOUND;
+         Begin
+            Select Magacin
+            Into nMagacin
+            From Partner_Magacin_Flag
+            Where PPartner = SlogPartner.Partner And Flag = 'A';
+         Exception
+            When No_Data_Found Then
+               nMagacin := Null;
+         End;
+         -- ako nema, pravi magacin partnera
+         If nMagacin Is Null Then
+            NapraviMagacinPartnera( SlogPartner.Partner );
+            Begin
+               Select Magacin
+               Into nMagacin
+               From Partner_Magacin_Flag
+               Where PPartner = SlogPartner.Partner And Flag = 'A';
+            Exception
+               When No_Data_Found Then
+                  null;
+                  --Raise_Application_Error ( '-20998' , 'Ne postoji magacin partnera ! obavestite nadlezno lice .' );
+            End;
+         End If;
+         -- pravi zaglavlje dokumenta
+         cBrojDok := To_Char ( PSekvenca.NextVal( 'Broj_PocetnogStanja', nGodina ) );
+
+         Insert Into Dokument ( Vrsta_dok , Broj_dok , Godina, Tip_dok, Datum_Dok, Datum_Unosa, User_id,
+                                PPartner, Org_Deo, Status,Broj_dok1 )
+         Values ( '21' , cBrojDok, nGodina, 99, dDatum , sysdate, User,
+                  SlogPartner.Partner,nMagacin , 0,1 );
+
+         -- stavke dokumenta
+         nStavka := 0;
+         Open Proizvod_Cur( SlogPartner.Partner, nGodina );
+         Loop
+         Fetch  Proizvod_Cur Into SlogProizvod;
+         Exit When Proizvod_Cur % NOTFOUND;
+
+            nStavka := nStavka + 1;
+
+            nCena := NVL( PPlanskiCenovnik.Cena( SlogProizvod.Proizvod, dDatum, 'YUD' , 1 ), 0 );
+            cJM := PProizvod.JedMere(SlogProizvod.Proizvod);
+
+            nKolicina := NVL(SlogProizvod.Ulaz, 0) - NVL(SlogProizvod.Izlaz, 0);
+
+            -- u zavisnosti od kolicine se odredjuje k. robe
+            -- zbog prikaza u izvestajima (+) kao ulaz i (-) kao izlaz
+            If nKolicina > 0 Then
+               nKRobe := 1;
+            Else
+               nKRobe := -1;
+            End If;
+
+            Insert Into Stavka_Dok( Vrsta_dok , Broj_dok , Godina, Stavka,
+                                    Proizvod, Kolicina, Jed_mere, Lokacija,
+                                    K_Rez, K_Robe, K_Ocek, Faktor, Realizovano,
+                                    Cena, Valuta, Kontrola )
+            Values ( '21', cBrojDok, nGodina, nStavka, SlogProizvod.Proizvod,
+                     nKolicina * nKRobe, cJM,
+                     '1', 0, nKRobe, 0, 1, nKolicina * nKRobe, nCena, 'YUD',1 );
+         End Loop;
+         Close Proizvod_Cur;
+
+         PKonacnaVerzija.PocetnoStanje( nGodina, cBrojDok, nMagacin, 0, FALSE );
+
+         Update Dokument
+         Set Status = 1
+         Where Vrsta_dok = '21' And Godina = nGodina And Broj_dok = cBrojDok;
+      End Loop;
+      Close Partner_Cur;
+
+
+
+End;
+
+"REM WORKSPACETAB2",DATUMI_PRO.sql,,94
+Select DAT_MIN,DAT_MAX,PRT,PRO,ULAZ,IZLAZ,STANJE,MAG,MAX_DAT_PS,MIN_DAT_PS
+     , (Select count(*) from Dokument d7, Stavka_Dok sd7
+        Where d7.Datum_dok > MAX_DAT_PS
+          And d7.org_Deo = MAG and d7.vrsta_dok != 21
+          And d7.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+          And d7.Status > 0
+          And d7.Vrsta_Dok = sd7.Vrsta_Dok And d7.Broj_Dok = sd7.Broj_Dok And d7.Godina = sd7.Godina
+          And sd7.Proizvod = PRO
+       ) UK_DOK_POSLE_PS
+From
+(
+SELECT DAT_MIN,DAT_MAX,PRT,PRO,ULAZ,IZLAZ,STANJE,MAG
+     , (Select Max(d3.Datum_dok) from dokument d3, Stavka_Dok sd3 where d3.vrsta_dok = 21 and d3.org_Deo = MAG and sd3.proizvod = PRO
+               And d3.Vrsta_Dok = sd3.Vrsta_Dok And d3.Broj_Dok = sd3.Broj_Dok And d3.Godina = sd3.Godina
+        Group by Datum_dok
+       ) MAX_DAT_PS
+
+     , (Select Min(d4.Datum_dok) from dokument d4, Stavka_Dok sd4 where d4.vrsta_dok = 21 and d4.org_Deo = MAG and sd4.proizvod = PRO
+               And d4.Vrsta_Dok = sd4.Vrsta_Dok And d4.Broj_Dok = sd4.Broj_Dok And d4.Godina = sd4.Godina
+       ) MIN_DAT_PS
+FROM
+(
+     Select
+            nvl((Select Max(d1.Datum_dok) from dokument d1, Stavka_Dok sd1 where d1.vrsta_dok = 21 and d1.org_Deo = d.org_deo
+                        And sd1.proizvod = sd.proizvod
+                        And d1.Vrsta_Dok = sd1.Vrsta_Dok And d1.Broj_Dok = sd1.Broj_Dok And d1.Godina = sd1.Godina
+                 ),
+                (Select Min(d11.Datum_dok) from dokument d11, Stavka_Dok sd11 where d11.vrsta_dok != 21
+                        And d11.org_Deo = d.org_deo And sd11.proizvod = sd.proizvod
+                        And d11.Vrsta_Dok = sd11.Vrsta_Dok And d11.Broj_Dok = sd11.Broj_Dok And d11.Godina = sd11.Godina
+                )
+               ) DAT_MIN
+          , TO_DATE('31.12.'||
+               TO_CHAR(TO_NUMBER(
+               TO_CHAR(
+                          nvl((Select Max(d2.Datum_dok) from dokument d2, Stavka_Dok sd2 where d2.vrsta_dok = 21 and org_Deo = d.org_deo
+                                      And sd2.proizvod = sd.proizvod
+                                      And d2.Vrsta_Dok = sd2.Vrsta_Dok And d2.Broj_Dok = sd2.Broj_Dok And d2.Godina = sd2.Godina
+                                      ),
+                              (Select Min(d22.Datum_dok) from dokument d22, Stavka_Dok sd22 where d22.vrsta_dok != 21 and d22.org_Deo = d.org_deo
+                                      And sd22.proizvod = sd.proizvod
+                                      And d22.Vrsta_Dok = sd22.Vrsta_Dok And d22.Broj_Dok = sd22.Broj_Dok And d22.Godina = sd22.Godina
+                              )
+                             )
+                      ,'YYYY'
+                      ) ))
+                    ,'DD.MM.YYYY'
+                   ) DAT_MAX
+          , PPartner PRT, sd.Proizvod PRO
+          , ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz
+          , ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz
+          , ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje
+          , D.ORG_DEO MAG
+     From Dokument d, Stavka_Dok sd
+     Where d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+       And d.Status > 0
+       And d.Org_Deo In (Select Magacin From Partner_magacin_Flag)
+       And d.Datum_Dok
+       Between
+                     nvl((Select Max(d5.Datum_dok) from dokument d5, Stavka_Dok sd5 where d5.vrsta_dok = 21 and d5.org_Deo = d.org_deo
+                                 And d5.org_Deo = d.org_deo And sd5.proizvod = sd.proizvod
+                                 And d5.Vrsta_Dok = sd5.Vrsta_Dok And d5.Broj_Dok = sd5.Broj_Dok And d5.Godina = sd5.Godina
+                         ),
+                         (Select Min(d55.Datum_dok) from dokument d55, Stavka_Dok sd55 where d55.vrsta_dok != 21 and d55.org_Deo = d.org_deo
+                                 And d55.org_Deo = d.org_deo And sd55.proizvod = sd.proizvod
+                                 And d55.Vrsta_Dok = sd55.Vrsta_Dok And d55.Broj_Dok = sd55.Broj_Dok And d55.Godina = sd55.Godina
+                         )
+                        )
+                AND
+                     TO_DATE('31.12.'||
+                         TO_CHAR(TO_NUMBER(
+                         TO_CHAR(
+                                    nvl((Select Max(d6.Datum_dok) from dokument d6, Stavka_Dok sd6 where d6.vrsta_dok = 21 and d6.org_Deo = d.org_deo
+                                                And d6.org_Deo = d.org_deo And sd6.proizvod = sd.proizvod
+                                                And d6.Vrsta_Dok = sd6.Vrsta_Dok And d6.Broj_Dok = sd6.Broj_Dok And d6.Godina = sd6.Godina
+                                        ),
+                                        (Select MIN(d66.Datum_dok) from dokument d66, Stavka_Dok sd66 where d66.vrsta_dok != 21 and d66.org_Deo = d.org_deo
+                                                And d66.org_Deo = d.org_deo And sd66.proizvod = sd.proizvod
+                                                And d66.Vrsta_Dok = sd66.Vrsta_Dok And d66.Broj_Dok = sd66.Broj_Dok And d66.Godina = sd66.Godina
+                                        )
+                                       )
+                                ,'YYYY'
+                                ) ))
+                              ,'DD.MM.YYYY'
+                             )
+
+       And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+       And sd.K_Robe != 0
+       And d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+       AND D.PPARTNER = 7767
+     Group By d.Ppartner, sd.Proizvod, d.Org_Deo
+)
+)
+ORDER BY DAT_MIN, PRT, PRO, MAG
+"REM WORKSPACETAB3",DATUMI_PO_GODINAMA.sql,,23
+--PROBAJ DA SECES PO GODINAMA
+
+     Select D.GODINA, PPartner PRT, sd.Proizvod PRO
+          , (Select Max(d3.Datum_dok) from dokument d3, Stavka_Dok sd3 where d3.vrsta_dok = 21 and d3.org_Deo = d.org_deo and sd3.proizvod = sd.proizvod
+               And d3.Vrsta_Dok = sd3.Vrsta_Dok And d3.Broj_Dok = sd3.Broj_Dok And d3.Godina = sd3.Godina
+               And d3.godina = d.godina
+             Group by Datum_dok
+            ) MAX_DAT_PS
+          , ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz
+          , ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz
+          , ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje
+          , D.ORG_DEO MAG
+     From Dokument d, Stavka_Dok sd
+     Where d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+       And d.Status > 0
+       And d.Org_Deo In (Select Magacin From Partner_magacin_Flag)
+       And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+       And sd.K_Robe != 0
+       And d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+--       AND D.PPARTNER = 7767
+     Group By D.GODINA, d.Ppartner, sd.Proizvod, d.Org_Deo
+ORDER BY to_number(d.Ppartner), d.Org_Deo, D.GODINA, to_number(sd.Proizvod)
+
+"REM WORKSPACETAB4",Palete_iz_mag.sql,,78
+declare
+  cVrstaDok Varchar2(3);
+  nGodina   Number;
+  cBrojDok  Varchar2(9);
+
+  nUpisDejaPTab Number := 1000 ;
+  cursor Palete_cur is
+     Select d.godina, d.vrsta_dok, d.broj_dok, d.tip_dok, d.datum_Dok
+          , d.org_deo, PPartner PRT, sd.Proizvod PRO
+          , Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 )    Ulaz
+          , Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 )  Izlaz
+          --     , ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje
+     From Dokument d, Stavka_Dok sd
+     Where d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+       And d.Status > 0
+       And d.Org_Deo In (Select Magacin From Partner_magacin_Flag)
+       And d.Datum_Dok Between nvl((Select Max(Datum_dok) from dokument where vrsta_dok = 21 and org_Deo = d.org_deo), to_date('01.01.0001','dd.mm.yyyy'))
+       And to_date('31.12.2009','dd.mm.yyyy')--sysdate
+       And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+       And sd.K_Robe != 0
+       And d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+     Order By d.godina, to_number(d.Ppartner),  d.Org_Deo, sd.Proizvod ;
+
+     Palete Palete_cur  % rowtype;
+
+  cursor IzMag_cur(cVrd Varchar2, nGod Number, cBrojDok Varchar2) is
+     Select * from dokument
+     where godina = nGod And Vrsta_dok = cVrd And Broj_Dok = cBrojDok ;
+
+     IzMag IzMag_cur % Rowtype;
+begin
+     Delete
+     From Deja_pomocna_tab
+     Where Polje39 = '1000';
+     commit;
+
+      Open Palete_cur;
+      Loop
+      Fetch Palete_cur Into Palete;
+      Exit When Palete_cur % NOTFOUND;
+
+           MagKartica.NadjiRobniDokument( Palete.Vrsta_Dok,
+                                          Palete.Godina,
+                                          Palete.Broj_Dok,
+                                          cVrstaDok, nGodina, cBrojDok );
+
+           Open IzMag_cur(cVrstaDok, nGodina, cBrojDok);
+           Fetch IzMag_cur Into IzMag;
+--                 dbms_output.put_line(to_char(Palete.GODINA)                       ||' '||
+--                                      lpad(Palete.VRSTA_DOK,3)                     ||' '||
+--                                      lpad(Palete.BROJ_DOK,5)                      ||' '||
+--                                      lpad(to_char(Palete.TIP_DOK),3)              ||' '||
+--                                      lpad(to_char(Palete.DATUM_DOK,'dd.mm.yy'),8) ||' '||
+--                                      lpad(to_char(Palete.ORG_DEO),5)              ||' '||
+--                                      lpad(Palete.PRT,7)                           ||' '||
+--                                      lpad(Palete.PRO,7)                           ||' '||
+--                                      lpad(to_char(Palete.ULAZ),5)                 ||' '||
+--                                      lpad(to_char(Palete.IZLAZ),5)                ||' '||
+--                                      lpad(to_char(IzMag.Org_Deo),5)
+--                                     );
+
+
+            Insert into deja_pomocna_tab(Polje1,Polje2,Polje3,Polje4,Polje5,Polje6,Polje7,Polje8,Polje9,Polje10,Polje11, polje39, polje40)
+            Values(Palete.GODINA, Palete.VRSTA_DOK, Palete.BROJ_DOK, Palete.TIP_DOK, Palete.DATUM_DOK,
+                   Palete.ORG_DEO, Palete.PRT, Palete.PRO, Palete.ULAZ, Palete.IZLAZ, IzMag.Org_Deo,
+                   to_char(nUpisDejaPTab), to_char(nUpisDejaPTab)|| ' palete'
+                   );
+     commit;
+           Close IzMag_cur;
+      End Loop;
+      Close Palete_cur;
+
+
+end;
+/
+Select Polje1,Polje2,Polje3,Polje4,Polje5,Polje6,Polje7,Polje8,Polje9,Polje10,Polje11, polje39, polje40
+From Deja_pomocna_tab
+where Polje39 = '1000';
+"REM WORKSPACETAB5","Poredi PS_AMB.sql",,15
+     Select d.godina, d.vrsta_dok, d.broj_dok, d.tip_dok, d.datum_Dok
+          , d.org_deo, PPartner PRT, sd.Proizvod PRO
+          , Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 )    Ulaz
+          , Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 )  Izlaz
+          --     , ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje
+     From Dokument d, Stavka_Dok sd
+     Where d.Tip_Dok In ( 15, 203, 204, 99, 301, 402, 61, 60 )
+       And d.Status > 0
+       And d.Org_Deo In (Select Magacin From Partner_magacin_Flag)
+       And d.Datum_Dok Between nvl((Select Max(Datum_dok) from dokument where vrsta_dok = 21 and org_Deo = d.org_deo), to_date('01.01.0001','dd.mm.yyyy'))
+       And to_date('31.12.2009','dd.mm.yyyy')--sysdate
+       And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+       And sd.K_Robe != 0
+       And d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+     Order By d.godina, to_number(d.Ppartner),  d.Org_Deo, sd.Proizvod ;
+"REM WORKSPACETAB6",as.sql,,24
+--DELETE FROM STAVKA_DOK
+--WHERE VRSTA_DOK = 21
+--AND (GODINA,BROJ_DOK)
+--    IN ( Select GODINA,BROJ_DOK from dokument Where Vrsta_dok = 21 and ORG_DEO In (Select Magacin From Partner_magacin_Flag) )
+--/
+--DELETE FROM dokument
+--Where Vrsta_dok = 21
+--  and ORG_DEO In (Select Magacin From Partner_magacin_Flag)
+--/
+--commit
+--/
+Select d.godina, min(datum_dok), max(datum_dok), min(datum_unosa),max(datum_unosa), count(*)--D.ROWID, D.USER_ID, D.org_deo,d.ppartner,SD.proizvod,sd.kolicina,faktor,k_robe, psa.*
+from  dokument d, stavka_dok sd
+   --, ps_ambalaze psa
+where
+--d.godina = 2009
+--  and
+d.vrsta_dok = 21
+  and d.org_deo in (select magacin from partner_magacin_flag)
+  and sd.godina    (+)= d.godina and sd.vrsta_dok (+)= d.vrsta_dok and sd.broj_dok  (+)= d.broj_dok
+-- and d.godina = psa.godina and d.ppartner = psa.partner and sd.proizvod = psa.proizvod
+
+group by d.godina
+order by d.godina
+"REM WORKSPACETAB7","Stanje partnera",,35
+Select d.ppartner, pp.naziv, pp.tip_partnera, D.org_deo, d.godina
+     , SD.proizvod, p.naziv
+     , sum(sd.kolicina*sd.faktor*k_robe) kol_god
+,
+(         Select sd1.kolicina
+          From  dokument d1, stavka_dok sd1
+          Where d1.vrsta_dok = '21'
+            and d.godina = d1.godina
+            and d.org_Deo = d1.org_deo
+            and d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+            and sd1.vrsta_dok = 21
+            and sd.proizvod = sd1.proizvod
+
+) PS_AMB_KOL
+
+from  dokument d, stavka_dok sd, poslovni_partner pp, proizvod p
+where
+      d.org_deo in (select magacin from partner_magacin_flag)
+
+  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  and pp.sifra = d.ppartner
+  and p.sifra  = sd.proizvod
+
+  and d.datum_dok between to_date('01.01.'||to_char(d.godina),'dd.mm.yyyy') and
+                          to_date('31.12.'||to_char(d.godina),'dd.mm.yyyy')
+  and sd.k_robe <> '0'
+  and d.ppartner not in ('0')
+--  and ppartner = '8759'
+
+--  and d.godina = nvl(PS_ABM.godina,d.godina)
+--  and sd.proizvod = nvl(PS_ABM.proizvod, sd.proizvod)
+--  and d.ppartner = nvl(PS_ABM.ppartner,d.ppartner)
+group by d.ppartner, pp.naziv, pp.tip_partnera, D.org_deo, d.godina
+       , SD.proizvod, p.naziv
+order by to_number(d.ppartner), to_number(sd.proizvod), d.godina
+"REM WORKSPACETAB8",Query9,,41
+Select PPARTNER,NAZIV_PRT,TIP_PARTNERA,ORG_DEO,GODINA,PROIZVOD,NAZIV_PRO,KOL_GOD,PS_AMB_KOL
+From
+(
+	Select d.ppartner, pp.naziv naziv_prt, pp.tip_partnera, D.org_deo, d.godina
+	     , SD.proizvod, p.naziv naziv_pro
+	     , sum(sd.kolicina*sd.faktor*k_robe) kol_god
+	,
+	(         Select sd1.kolicina
+	          From  dokument d1, stavka_dok sd1
+	          Where d1.vrsta_dok = '21'
+	            and d.godina = d1.godina
+	            and d.org_Deo = d1.org_deo
+	            and d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+	            and sd1.vrsta_dok = 21
+	            and sd.proizvod = sd1.proizvod
+
+	) PS_AMB_KOL
+
+	from  dokument d, stavka_dok sd, poslovni_partner pp, proizvod p
+	where
+	      d.org_deo in (select magacin from partner_magacin_flag)
+
+	  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+	  and pp.sifra = d.ppartner
+	  and p.sifra  = sd.proizvod
+
+	  and d.datum_dok between to_date('01.01.'||to_char(d.godina),'dd.mm.yyyy') and
+	                          to_date('31.12.'||to_char(d.godina),'dd.mm.yyyy')
+	  and sd.k_robe <> '0'
+	  and d.ppartner not in ('0')
+	--  and ppartner = '8759'
+
+	--  and d.godina = nvl(PS_ABM.godina,d.godina)
+	--  and sd.proizvod = nvl(PS_ABM.proizvod, sd.proizvod)
+	--  and d.ppartner = nvl(PS_ABM.ppartner,d.ppartner)
+	group by d.ppartner, pp.naziv, pp.tip_partnera, D.org_deo, d.godina
+	       , SD.proizvod, p.naziv
+)
+Where godina in	(2009,2010)
+AND KOL_GOD > 999
+Order by to_number(ppartner), to_number(proizvod), godina
+"REM WORKSPACETAB9","poredi PS",,54
+	Select amb.*, d1.godina, d1.vrsta_dok, d1.broj_dok, d1.org_deo, d1.broj_dok1
+	     , sd1.proizvod, sd1.kolicina
+	From
+	(
+		Select d.ppartner, pp.naziv naziv_prt, pp.tip_partnera, D.org_deo, d.godina
+		     , SD.proizvod, p.naziv naziv_pro
+		     , sum(sd.kolicina*sd.faktor*k_robe) kol_god
+		,
+		(         Select sd1.kolicina
+		          From  dokument d1, stavka_dok sd1
+		          Where d1.vrsta_dok = '21'
+		            and d.godina = d1.godina
+		            and d.org_Deo = d1.org_deo
+		            and d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+		            and sd1.vrsta_dok = 21
+		            and sd.proizvod = sd1.proizvod
+
+		) PS_AMB_KOL
+
+		from  dokument d, stavka_dok sd, poslovni_partner pp, proizvod p
+		where
+		      d.org_deo in (select magacin from partner_magacin_flag)
+
+		  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+		  and pp.sifra = d.ppartner
+		  and p.sifra  = sd.proizvod
+
+		  and d.datum_dok between to_date('01.01.'||to_char(d.godina),'dd.mm.yyyy') and
+		                          to_date('31.12.'||to_char(d.godina),'dd.mm.yyyy')
+		  and sd.k_robe <> '0'
+		  and d.ppartner not in ('0')
+		--  and ppartner = '8759'
+
+		--  and d.godina = nvl(PS_ABM.godina,d.godina)
+		--  and sd.proizvod = nvl(PS_ABM.proizvod, sd.proizvod)
+		--  and d.ppartner = nvl(PS_ABM.ppartner,d.ppartner)
+		group by d.ppartner, pp.naziv, pp.tip_partnera, D.org_deo, d.godina
+		       , SD.proizvod, p.naziv
+	) amb, dokument d1, stavka_dok sd1
+
+	Where amb.godina in	(2009,2010)
+	  AND amb.KOL_GOD > 999
+	  AND amb.PPARTNER IN
+	      (SELECT PPARTNER FROM DOKUMENT
+	       WHERE GODINA = 2010 AND VRSTA_DOK = 21
+	      )
+  and d1.vrsta_dok = 21
+  and d1.godina = amb.godina
+  and amb.godina = d1.godina
+  and amb.ppartner = d1.ppartner
+  and d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+  and amb.proizvod = sd1.proizvod
+Order by to_number(amb.ppartner)
+       , to_number(amb.proizvod), amb.godina
+"REM WORKSPACETAB10","PRT_IMA_PS_NEMA ZA AMB",,87
+Select PPARTNER,NAZIV_PRT,TIP_PARTNERA,ORG_DEO,GODINA,PROIZVOD,NAZIV_PRO,KOL_GOD,PS_AMB_KOL,PS_AMB_2010_BRD, PS_AMB_2010_KOL
+From
+(
+	Select amb.*
+	     , (Select d3.broj_dok
+	        From Dokument d3
+	        Where D3.vrsta_dok = 21
+	          and d3.godina = 2010
+	          and d3.ppartner = amb.ppartner
+	          and d3.org_deo = amb.org_Deo
+	       ) PS_AMB_2010_BRD
+         , (Select SD3.KOLICINA
+	        From Dokument d3, STAVKA_DOK SD3
+	        Where D3.vrsta_dok = 21 and d3.godina = 2010
+	          and d3.ppartner = amb.ppartner
+	          and d3.org_deo = amb.org_Deo
+              AND d3.godina = sd3.godina and d3.vrsta_dok = sd3.vrsta_dok and d3.broj_dok = sd3.broj_dok
+              AND SD3.vrsta_dok = 21 and Sd3.godina = 2010
+	          AND SD3.PROIZVOD = AMB.PROIZVOD
+	       ) PS_AMB_2010_KOL
+	From
+	(
+		Select d.ppartner, pp.naziv naziv_prt, pp.tip_partnera, D.org_deo, d.godina
+		     , SD.proizvod, p.naziv naziv_pro
+		     ,           Sum( Round( Decode( D.vrsta_Dok || d.tip_Dok,
+                              '314', sd.Kolicina,
+                              '414', sd.Kolicina,
+                              sd.Realizovano ) * sd.Faktor * sd.K_Robe, 5 ) ) KOL_GOD
+		,
+		(         Select sd1.kolicina
+		          From  dokument d1, stavka_dok sd1
+		          Where d1.vrsta_dok = '21'
+		            and d.godina = d1.godina
+		            and d.org_Deo = d1.org_deo
+		            and d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+		            and sd1.vrsta_dok = 21
+		            and sd.proizvod = sd1.proizvod
+
+		) PS_AMB_KOL
+
+		from  dokument d, stavka_dok sd, poslovni_partner pp, proizvod p
+		where
+		      d.org_deo in (select magacin from partner_magacin_flag)
+
+		  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+		  and pp.sifra = d.ppartner
+		  and p.sifra  = sd.proizvod
+
+		  and d.datum_dok between to_date('01.01.'||to_char(d.godina),'dd.mm.yyyy') and
+		                          to_date('31.12.'||to_char(d.godina),'dd.mm.yyyy')
+		  and sd.k_robe <> '0'
+		  and d.ppartner not in ('0')
+		--  and ppartner = '8759'
+
+		--  and d.godina = nvl(PS_ABM.godina,d.godina)
+		--  and sd.proizvod = nvl(PS_ABM.proizvod, sd.proizvod)
+		--  and d.ppartner = nvl(PS_ABM.ppartner,d.ppartner)
+		group by d.ppartner, pp.naziv, pp.tip_partnera, D.org_deo, d.godina
+		       , SD.proizvod, p.naziv
+	)  amb
+--	 , dokument d1, stavka_dok sd1
+
+	Where amb.godina in	(2009)
+	  AND amb.KOL_GOD > 999
+	  AND (amb.PPARTNER,amb.proizvod, amb.kol_god) not in
+	      (SELECT d2.PPARTNER,sd2.proizvod
+	            , Sum( Round( Decode( d2.Vrsta_Dok || d2.Tip_Dok,
+                                      '314', sd2.Kolicina,
+                                      '414', sd2.Kolicina,
+                                      sd2.Realizovano
+                                    ) * sd2.Faktor * sd2.K_Robe, 5
+                            )
+                     )
+           FROM DOKUMENT d2, STAVKA_DOK sd2
+	       WHERE d2.GODINA = 2010 AND d2.VRSTA_DOK = 21
+	         and d2.godina = amb.godina
+	         and amb.godina = d2.godina
+	         and amb.ppartner = d2.ppartner
+	         and d2.godina = sd2.godina and d2.vrsta_dok = sd2.vrsta_dok and d2.broj_dok = sd2.broj_dok
+	         and sd2.GODINA = 2010 AND sd2.VRSTA_DOK = 21
+	         and amb.proizvod = sd2.proizvod
+	       group by d2.ppartner, SD2.proizvod
+	      )
+) amb1
+where PS_AMB_2010_BRD is not null
+Order by to_number(amb1.ppartner)
+       , to_number(amb1.proizvod), amb1.godina
+"REM WORKSPACETAB11",Query22,,38
+select GODINA,PPARTNER,ORG_DEO,PROIZVOD,KOL_GOD kol_2009
+     , PRO,KOLICINA*K_ROBE kol_ps_2010
+--     ,
+FROM
+(
+	SELECT KRAJ_PRET.GODINA,KRAJ_PRET.PPARTNER,KRAJ_PRET.ORG_DEO,KRAJ_PRET.PROIZVOD,KRAJ_PRET.KOL_GOD
+	,PS_2010.PROIZVOD pro, PS_2010.KOLICINA, PS_2010.K_ROBE
+	FROM
+	(
+		Select d.ppartner, D.org_deo, d.godina, SD.proizvod
+		     ,           Sum( Round( Decode( D.vrsta_Dok || d.tip_Dok,
+		                            '314', sd.Kolicina,
+		                            '414', sd.Kolicina,
+		                            sd.Realizovano ) * sd.Faktor * sd.K_Robe, 5 ) ) KOL_GOD
+		from  dokument d, stavka_dok sd
+		where
+		      d.org_deo in (select magacin from partner_magacin_flag)
+		  AND D.GODINA = 2009
+		  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+
+		GROUP BY D.GODINA, d.ppartner, D.org_deo, d.godina, SD.proizvod
+	) KRAJ_PRET
+	,
+	        (SELECT D2.PPARTNER, SD2.PROIZVOD, SD2.KOLICINA, SD2.K_ROBE
+	           FROM DOKUMENT d2, STAVKA_DOK sd2
+		       WHERE d2.GODINA = 2010 AND d2.VRSTA_DOK = 21
+		         and d2.godina = sd2.godina and d2.vrsta_dok = sd2.vrsta_dok and d2.broj_dok = sd2.broj_dok
+		         and sd2.GODINA = 2010 AND sd2.VRSTA_DOK = 21
+
+		      ) PS_2010
+
+
+	WHERE KRAJ_PRET.PPARTNER = PS_2010.PPARTNER
+	  and KRAJ_PRET.proizvod = PS_2010.proizvod
+)
+
+WHERE KOL_GOD <> KOLICINA * K_ROBE
+ORDER BY TO_NUMBER(PPARTNER), TO_NUMBER(PROIZVOD)
+"REM WORKSPACETAB12",PS_AMB,,104
+Select
+
+(Select d4.broj_dok
+ From dokument d4, stavka_dok sd4
+ Where d4.vrsta_dok = 21 and d4.godina = 2010
+   and d4.ppartner = amb1.ppartner
+   and d4.vrsta_dok = sd4.vrsta_dok and d4.broj_dok = sd4.broj_dok and d4.godina   = sd4.godina
+ Group by d4.broj_dok
+) broj_dok
+,'21',2010,
+(Select count(*)
+ From dokument d4, stavka_dok sd4
+ Where d4.vrsta_dok = 21 and d4.godina = 2010
+   and d4.ppartner = amb1.ppartner
+   and d4.vrsta_dok = sd4.vrsta_dok and d4.broj_dok = sd4.broj_dok and d4.godina   = sd4.godina
+) + 1 stavka
+,
+ PROIZVOD,NULL,NULL,KOL_GOD,PPROIZVOD.JEDMERE(PROIZVOD),NVL( PPlanskiCenovnik.Cena( Proizvod,
+                                                               TO_DATE('01.01.2010','DD.MM.YYYY'), 'YUD' , 1 ), 0 ),'YUD',1
+,NULL,NULL,0,1,0,1,1,
+
+KOL_GOD
+ ,NULL,NULL, NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL,null
+
+--Select PPARTNER,NAZIV_PRT,TIP_PARTNERA,ORG_DEO,GODINA,PROIZVOD,NAZIV_PRO,KOL_GOD,PS_AMB_KOL,PS_AMB_2010
+From
+(
+	Select amb.*
+	     , (Select d3.broj_dok
+	        From Dokument d3
+	        Where D3.vrsta_dok = 21
+	          and d3.godina = 2010
+	          and d3.ppartner = amb.ppartner
+	          and d3.org_deo = amb.org_Deo
+	       ) PS_AMB_2010
+--	     , d1.godina, d1.vrsta_dok, d1.broj_dok, d1.org_deo, d1.broj_dok1
+--	     , sd1.proizvod, sd1.kolicina
+	From
+	(
+		Select d.ppartner, pp.naziv naziv_prt, pp.tip_partnera, D.org_deo, d.godina
+		     , SD.proizvod, p.naziv naziv_pro
+		     ,           Sum( Round( Decode( D.vrsta_Dok || d.tip_Dok,
+                              '314', sd.Kolicina,
+                              '414', sd.Kolicina,
+                              sd.Realizovano ) * sd.Faktor * sd.K_Robe, 5 ) ) KOL_GOD
+		,
+		(         Select sd1.kolicina
+		          From  dokument d1, stavka_dok sd1
+		          Where d1.vrsta_dok = '21'
+		            and d.godina = d1.godina
+		            and d.org_Deo = d1.org_deo
+		            and d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+		            and sd1.vrsta_dok = 21
+		            and sd.proizvod = sd1.proizvod
+
+		) PS_AMB_KOL
+
+		from  dokument d, stavka_dok sd, poslovni_partner pp, proizvod p
+		where
+		      d.org_deo in (select magacin from partner_magacin_flag)
+
+		  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+		  and pp.sifra = d.ppartner
+		  and p.sifra  = sd.proizvod
+
+		  and d.datum_dok between to_date('01.01.'||to_char(d.godina),'dd.mm.yyyy') and
+		                          to_date('31.12.'||to_char(d.godina),'dd.mm.yyyy')
+		  and sd.k_robe <> '0'
+		  and d.ppartner not in ('0')
+		--  and ppartner = '8759'
+
+		--  and d.godina = nvl(PS_ABM.godina,d.godina)
+		--  and sd.proizvod = nvl(PS_ABM.proizvod, sd.proizvod)
+		--  and d.ppartner = nvl(PS_ABM.ppartner,d.ppartner)
+		group by d.ppartner, pp.naziv, pp.tip_partnera, D.org_deo, d.godina
+		       , SD.proizvod, p.naziv
+	)  amb
+--	 , dokument d1, stavka_dok sd1
+
+	Where amb.godina in	(2009)
+	  AND amb.KOL_GOD > 999
+	  AND (amb.PPARTNER,amb.proizvod, amb.kol_god) not in
+	      (SELECT d2.PPARTNER,sd2.proizvod
+	            , Sum( Round( Decode( d2.Vrsta_Dok || d2.Tip_Dok,
+                                      '314', sd2.Kolicina,
+                                      '414', sd2.Kolicina,
+                                      sd2.Realizovano
+                                    ) * sd2.Faktor * sd2.K_Robe, 5
+                            )
+                     )
+           FROM DOKUMENT d2, STAVKA_DOK sd2
+	       WHERE d2.GODINA = 2010 AND d2.VRSTA_DOK = 21
+	         and d2.godina = amb.godina
+	         and amb.godina = d2.godina
+	         and amb.ppartner = d2.ppartner
+	         and d2.godina = sd2.godina and d2.vrsta_dok = sd2.vrsta_dok and d2.broj_dok = sd2.broj_dok
+	         and sd2.GODINA = 2010 AND sd2.VRSTA_DOK = 21
+	         and amb.proizvod = sd2.proizvod
+	       group by d2.ppartner, SD2.proizvod
+	      )
+) amb1
+where PS_AMB_2010 is not null
+Order by to_number(amb1.ppartner)
+       , to_number(amb1.proizvod), amb1.godina
+"REM WORKSPACETAB13",Query19,,2
+select rowid, polje1, polje79, polje80
+from DEJA_POMOCNA_TAB
+"REM WORKSPACETAB14",Query12,,12
+Select D.DATUM_UNOSA, d.status, d.godina, d.vrsta_dok, d.broj_dok,d.ppartner,d.org_deo, d.broj_dok1
+     , sd.proizvod, sd.kolicina
+from  dokument d, stavka_dok sd
+where d.org_deo in (select magacin from partner_magacin_flag)
+  and d.vrsta_Dok = 21
+  and d.godina = 2010
+  and d.vrsta_dok = sd.vrsta_dok
+  and d.broj_dok = sd.broj_dok
+  and d.godina   = sd.godina
+  AND PPARTNER = 2922
+
+Order by to_number(ppartner), to_number(proizvod)
+"REM WORKSPACETAB15",Query28,,20
+Declare
+ Cursor Mag_cur is
+   Select org_deo
+   from dokument d
+   where org_deo in (select magacin from partner_magacin_flag)
+   Group by org_deo
+   order by org_deo;
+ Mag mag_cur % rowtype;
+
+Begin
+ Open mag_cur;
+ Loop
+ FETCH mag_cur INTO mag ;
+ EXIT WHEN mag_cur % NOTFOUND ;
+     GenerisiStanjeZaliha(mag.org_deo,sysdate,true);
+    --null;
+ End loop;
+ Close mag_cur;
+
+End;

@@ -1,0 +1,122 @@
+"REM WORKSPACETAB0",zalihe_anlitika_lok.sql,,10
+--SELECT * FROM ZALIHE_ANALITIKA
+--WHERE LOKACIJA IS NULL
+--AND ORG_DEO NOT IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+
+SELECT * --org_deo , porganizacionideo.naziv(org_deo) , PROIZVOD , pproizvod.naziv(proizvod)
+FROM ZALIHE_ANALITIKA
+WHERE LOKACIJA IS NULL
+--AND ORG_DEO IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+--GROUP BY org_deo , PROIZVOD
+ORDER BY TO_NUMBER(PROIZVOD)
+"REM WORKSPACETAB1",Magacin_u_MINUSU.sql,,3
+Select * from zalihe
+WHERE ORG_DEO not IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+  and stanje < 0
+"REM WORKSPACETAB2",dok_org_lokacije.sql,,21
+select distinct org_deo , porganizacionideo.naziv(org_deo)
+from   stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      sd.godina    (+)= d.godina
+  and sd.vrsta_dok (+)= d.vrsta_dok
+  and sd.broj_dok  (+)= d.broj_dok
+
+  AND SD.PROIZVOD = P.SIFRA
+  AND P.GRUPA_PROIZVODA=  GPR.ID
+
+ -----------------------------
+  -- ostali uslovi
+  and d.godina = 2007
+  and d.vrsta_dok  NOT IN (2,9,10)
+  --and proizvod in ( 97,6909,7418,8368,9416,11087,11426,11568,11570,12951,13676,14557,14776,15148,15660,15987,
+--                    16224,16649,16990,17488,17832,18087 )
+  AND LOKACIJA IS NULL
+order by org_deo
+
+"REM WORKSPACETAB3",sdok_proizvod_lokacije.sql,,21
+select distinct proizvod , pproizvod.naziv(proizvod)
+from   stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      sd.godina    (+)= d.godina
+  and sd.vrsta_dok (+)= d.vrsta_dok
+  and sd.broj_dok  (+)= d.broj_dok
+
+  AND SD.PROIZVOD = P.SIFRA
+  AND P.GRUPA_PROIZVODA=  GPR.ID
+
+ -----------------------------
+  -- ostali uslovi
+  and d.godina = 2007
+  and d.vrsta_dok  NOT IN (2,9,10)
+  --and proizvod in ( 97,6909,7418,8368,9416,11087,11426,11568,11570,12951,13676,14557,14776,15148,15660,15987,
+--                    16224,16649,16990,17488,17832,18087 )
+  AND LOKACIJA IS NULL
+order by to_number(sd.proizvod)
+
+"REM WORKSPACETAB4",dok_stdok_lokacije.sql,,22
+select porganizacionideo.naziv(org_deo), d.* , sd.*
+from   stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      sd.godina    (+)= d.godina
+  and sd.vrsta_dok (+)= d.vrsta_dok
+  and sd.broj_dok  (+)= d.broj_dok
+
+  AND SD.PROIZVOD = P.SIFRA
+  AND P.GRUPA_PROIZVODA=  GPR.ID
+
+ -----------------------------
+  -- ostali uslovi
+  and d.status != 0
+  and d.godina = 2007
+  and d.vrsta_dok  NOT IN (2,9,10)
+  --and proizvod in ( 97,6909,7418,8368,9416,11087,11426,11568,11570,12951,13676,14557,14776,15148,15660,15987,
+--                    16224,16649,16990,17488,17832,18087 )
+  AND LOKACIJA IS NULL
+order by to_number(sd.proizvod) , d.datum_dok ,to_number(sd.VRSTA_dok),to_number(sd.broj_dok)
+
+"REM WORKSPACETAB5",OrgDeo_Proizvod.sql,,23
+select org_deo , porganizacionideo.naziv(org_deo) , PROIZVOD , pproizvod.naziv(proizvod)
+from   stavka_dok sd , dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from   dokument d , stavka_dok sd , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      sd.godina    (+)= d.godina
+  and sd.vrsta_dok (+)= d.vrsta_dok
+  and sd.broj_dok  (+)= d.broj_dok
+
+  AND SD.PROIZVOD = P.SIFRA
+  AND P.GRUPA_PROIZVODA=  GPR.ID
+
+ -----------------------------
+  -- ostali uslovi
+  and d.status != 0
+  and d.godina = 2007
+  and d.vrsta_dok  NOT IN (2,9,10)
+  --and proizvod in ( 97,6909,7418,8368,9416,11087,11426,11568,11570,12951,13676,14557,14776,15148,15660,15987,
+--                    16224,16649,16990,17488,17832,18087 )
+  AND LOKACIJA IS NULL
+GROUP BY org_deo , PROIZVOD
+ORDER BY org_deo , TO_NUMBER(PROIZVOD)
+
+"REM WORKSPACETAB6",generisi_stanje_zaliha.sql,,2
+Exec generisistanjezaliha(3828,sysdate,true);
+commit;
+"REM WORKSPACETAB7",select_upd_stavke.sql,,12
+select lokacija from stavka_dok sd
+--Update stavka_dok sd
+-- set lokacija = 1
+where sd.godina = 2007
+  and sd.vrsta_dok  NOT IN (2,9,10)
+  and LOKACIJA IS NULL
+  and ( sd.godina , sd.vrsta_dok , sd.broj_dok ) in
+           ( Select sd.godina , sd.vrsta_dok , sd.broj_dok
+             From Dokument sd
+             Where sd.godina = 2007
+               and sd.vrsta_dok  NOT IN (2,9,10)
+               and sd.status != 0 )

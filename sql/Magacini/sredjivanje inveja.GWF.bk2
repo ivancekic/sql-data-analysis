@@ -1,0 +1,62 @@
+"REM WORKSPACETAB0","prod cen",,20
+select * from prodajni_cenovnik pc
+
+-- MAG 103 ALBUSOVA ROBA
+--where proizvod in (  '1612','2684','3288','3289','3297','3301','3310','3339','3342','3343','3766','3812'
+--                   , '4006','4008','4022','4129','4130','4169','4175','4176','4178','4534','4541','4774'
+--                   , '4969','4971','4972','6279','8002'
+--                  )
+
+-- MAG 104 VITALOVA ROBA
+where proizvod in (  '3184','3190','3197','3198','3199','3200','3201','3202','3209','3210','3214','3215'
+                   , '3218','3221','3222','3764','4047','4049','4050','4051','4082','4085','4086','4088'
+                   , '4094','4104','4105','4196','4214','4299','4397','4706','4707','4708','4709','4710'
+                   , '4711','4714','7330','7983','7984','7985','7989','8680','8681','9438'
+                   , '11505','11506'
+                  )
+
+  and datum = (select max(datum) from prodajni_cenovnik pc1
+               where pc.proizvod = pc1.proizvod
+              )
+order by to_number(proizvod)
+"REM WORKSPACETAB1","nivelacije old",,23
+select
+d.*,
+SD.*
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+--  AND D.VRSTA_DOK <> 11
+  -----------------------------
+  -- ostali uslovi
+--  AND D.BROJ_DOK  = 2
+-- AND d.vrsta_Dok in (1)
+  and d.godina = 2012
+
+---  AND TIP_DOK = 11
+  AND D.ORG_DEO = 104
+  and d.vrsta_Dok = '80'
+  and d.broj_dok1='2'
+  and sd.proizvod ='4214'
+order by SD.PROIZVOD, d.datum_dok,d.datum_unosa;
+--ORDER BY STAVKA
+"REM WORKSPACETAB2","N I V E L",,16
+select
+d.rowid,
+d.*
+from dokument d
+Where
+     d.godina = 2012
+
+---  AND TIP_DOK = 11
+  and (
+          (d.vrsta_dok = '80' and d.broj_dok='48')
+or
+          (d.vrsta_dok = '3' and d.org_deo = 104 and d.broj_dok1='4193')
+       )
+--  and sd.proizvod ='4214'
+order by d.datum_dok,d.datum_unosa;
+--ORDER BY STAVKA

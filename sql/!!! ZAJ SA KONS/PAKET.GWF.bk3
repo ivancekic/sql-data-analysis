@@ -1,0 +1,94 @@
+"REM WORKSPACETAB0",Query1,,2
+SELECT * FROM MAPIRANJE
+WHERE FIRMA='VLASNIK_BAZE'
+"REM WORKSPACETAB1",Query2,,9
+
+SELECT K.FIRMA, K.NABAVNA_SIFRA, K.D_ORG
+FROM K_NALOTP_PAKOVANJE_MAPA@CITAJ_KON K
+   ,(
+        SELECT * FROM MAPIRANJE
+        WHERE FIRMA='VLASNIK_BAZE'
+    ) M
+WHERE M.IZ01=K.FIRMA
+
+"REM WORKSPACETAB2",Query3,,17
+SELECT *
+FROM ZALIHE Z
+,
+	(
+
+	SELECT K.FIRMA, K.NABAVNA_SIFRA, K.D_ORG
+	FROM K_NALOTP_PAKOVANJE_MAPA@CITAJ_KON K
+	   ,(
+	        SELECT * FROM MAPIRANJE
+	        WHERE FIRMA='VLASNIK_BAZE'
+	    ) M
+	WHERE M.IZ01=K.FIRMA
+	) K
+WHERE Z.ORG_DEO = K.D_ORG(+)
+  AND Z.PROIZVOD = K.NABAVNA_SIFRA(+)
+
+ORDER BY Z.ORG_DEO, PROIZVOD
+"REM WORKSPACETAB3","OVAJ ipak",,17
+drop view zalihe_union_rez_invej_mag;
+/
+drop public synonym zalihe_union_rez_invej_mag;
+/
+create view zalihe_union_rez_invej_mag
+as
+Select ORG_DEO,PROIZVOD,MIN_KOL,MAX_KOL,KOL_NAR,STANJE,REZERVISANA,U_KONTROLI,OCEKIVANA,STANJE_KONTROLNA
+from zalihe z
+Order by z.org_deo, to_number(proizvod)
+;
+/
+create public synonym zalihe_union_rez_invej_mag for invej.zalihe_union_rez_invej_mag
+;
+/
+GRANT SELECT ON invej.zalihe_union_rez_invej_mag TO FULL_ACCESS
+/
+GRANT SELECT ON invej.zalihe_union_rez_invej_mag TO RESTRICT_ACCESS
+"REM WORKSPACETAB4",Query12,,1
+create public synonym zalihe_union_rez_invej_mag for ratar.zalihe_union_rez_ratar_mag
+"REM WORKSPACETAB5",Query11,,1
+Select * from zalihe_union_rez_invej_mag
+"REM WORKSPACETAB6",Query9,,2
+select upper('zalihe_union_rez_invej_mag')
+from dual
+"REM WORKSPACETAB7","!Pravi synonym, GRANTOVANJE.sql",,34
+Create public synonym vrednostinastavkama_new FOR sunce.vrednostinastavkama_new ;
+/
+-- ako je paket ili funkcija
+GRANT EXECUTE ON sunce.vrednostinastavkama_new TO EXE
+/
+
+----------------------------------------------------
+----------------------------------------------------
+-- FULL_ACCESS      -- PL / SQL
+-- RESTRICT_ACCESS  -- FORMS
+
+-- ako je vrednostinastavkama_new, view
+GRANT DELETE ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT INSERT ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT SELECT ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT UPDATE ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT ALTER ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT ON COMMIT REFRESH ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT QUERY REWRITE ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT DEBUG ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+GRANT FLASHBACK ON sunce.vrednostinastavkama_new TO FULL_ACCESS
+/
+----
+GRANT SELECT ON sunce.vrednostinastavkama_new TO RESTRICT_ACCESS
+
+
+"REM WORKSPACETAB8",Query7,,2
+SELECT K.FIRMA, K.NABAVNA_SIFRA, K.D_ORG 
+FROM K_NALOTP_PAKOVANJE_MAPA@CITAJ_KON K

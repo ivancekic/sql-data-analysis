@@ -1,0 +1,526 @@
+"REM WORKSPACETAB0","izvorni ver 1.sql",,50
+--select d.GODINA,d.VRSTA_DOK,d.NAZIV_VR,d.BROJ_DOK,d.TIP_DOK,d.DATUM_DOK,d.DATUM_UNOSA,d.USER_ID,d.PPARTNER,d.STATUS,d.BROJ_DOK1,d.DATUM_IZVORNOG_DOK
+--     , d.ZA_BROJ_DOK,d.ZA_VRSTA_DOK,d.ZA_GODINA
+--     , d1.datum_dok
+--from
+--(
+	SELECT
+  		   D.GODINA,D.VRSTA_DOK,vrd.naziv naziv_vr,D.BROJ_DOK,D.TIP_DOK,d.org_deo, D.DATUM_DOK,D.DATUM_UNOSA,D.USER_ID,D.PPARTNER,D.STATUS, D.BROJ_DOK1
+  		 , D.DATUM_IZVORNOG_DOK
+		 , vd.za_broj_dok, vd.za_vrsta_Dok, vd.za_godina
+		 , vd.datum_dok IZVOR_dat_dok, VD.status IZVOR_DOK_STAT, VD.org_deo IZVOR_ORG, VD.broj_dok1 IZVOR_BRD1
+		 , VD.user_id IZVOR_USER, VD.datum_unosa IZVOR_DAT_UNOSA
+
+	FROM
+	 dokument  d, vrsta_dok vrd
+	 ,(SELECT VD.BROJ_DOK, VD.VRSTA_DOK, VD.GODINA, vd.ZA_BROJ_DOK,vd.ZA_VRSTA_DOK,vd.ZA_GODINA
+	        , d1.datum_dok, d1.status, d1.org_deo, d1.broj_dok1, d1.user_id, d1.datum_unosa
+	   FROM VEZNI_DOK vd, dokument d1
+	   where za_vrsta_dok not in ('41','14','24','90','10','9','2')
+         and vd.za_broj_dok = d1.broj_dok (+) and vd.za_godina = d1.godina (+) and vd.za_vrsta_dok = d1.vrsta_dok (+)
+      ) VD
+	WHERE
+	vrd.vrsta=d.vrsta_Dok
+--	and
+--	(
+--			D.VRSTA_DOK IN
+--
+--			(
+--				SELECT VRSTA FROM VRSTA_DOK
+--				WHERE
+--				   INSTR(NAZIV,'POV')>0
+--				OR INSTR(NAZIV,'STOR')>0
+--	 		)
+--	--or		D.VRSTA_DOK = '90'
+--	)
+	and d.vrsta_dok not in('64','62')
+--	and d.vrsta_dok not in('30')
+--	and d.vrsta_dok not in('12')
+--	and d.vrsta_Dok IN ('1','26','45','46')
+    and d.godina = 2012
+AND d.DATUM_DOK > TO_DATE('19.01.2012','dd.mm.yyyy')
+AND d.DATUM_UNOSA>TO_DATE('20.01.2012 14:30:00','dd.mm.yyyy hh24:mi:ss')
+	and d.vrsta_Dok IN ('13')
+
+	AND d.godina = vd.godina (+) and d.vrsta_dok = vd.vrsta_dok  (+) and d.broj_dok = vd.broj_dok (+)
+--
+--) d
+--
+--
+ORDER BY d.DATUM_DOK, d.DATUM_UNOSA
+
+"REM WORKSPACETAB1",Query14,,7
+EXEC GenerisiStanjeZaliha(690,sysdate,true) ;
+EXEC GenerisiStanjeZaliha(2051,SYSDATE,TRUE);
+EXEC GenerisiStanjeZaliha(2324,SYSDATE,TRUE);
+EXEC GenerisiStanjeZaliha(2352,SYSDATE,TRUE);
+EXEC GenerisiStanjeZaliha(2355,SYSDATE,TRUE);
+EXEC GenerisiStanjeZaliha(2396,SYSDATE,TRUE);
+EXEC GenerisiStanjeZaliha(2433,SYSDATE,TRUE);
+"REM WORKSPACETAB2","Sredi datume_izv_dok.sql",,176
+declare
+
+    lPomocna Boolean;-- Zbog poziva funkcije iz baze
+
+    nGodinaDok Number;
+    cBrojDok VarChar2(20);
+
+    nGodinaVeznog Number;
+    cBrojVeznog VarChar2(20);
+
+	cursor nadji_dok_cur is
+		SELECT
+	  		   D.GODINA,D.VRSTA_DOK,vrd.naziv naziv_vr,D.BROJ_DOK,D.TIP_DOK,D.DATUM_DOK,D.DATUM_UNOSA,D.USER_ID,D.PPARTNER,D.STATUS, D.BROJ_DOK1
+	  		 , D.DATUM_IZVORNOG_DOK
+
+		FROM
+		 dokument  d, vrsta_dok vrd
+		WHERE vrd.vrsta=d.vrsta_Dok
+--		  and d.godina=2010 and d.datum_dok < to_date('01.02.2010','dd.mm.yyyy')
+--		  and nvl(d.broj_dok,'-9998887') !='-9998888'
+		  and D.VRSTA_DOK IN (     '4',  '5', '30'				-- PRIJEM ROBE
+				                , '12', '13', '31'				-- OTPREMA ROBE
+				                , '26', '45', '46'				-- PREDAJA ROBE IZ PROIZVODNJE U MAGACIN
+				                , '27', '28', '32'				-- TREBOVANJE ROBE
+				                , '74'							-- TRANZIT
+				                , '90'							-- NIVELACIJE STAVKI - AUTOMATSKA
+				               )
+--          and d.godina != 0
+          and D.DATUM_IZVORNOG_DOK is null
+		;
+	nadji_dok nadji_dok_cur % rowtype;
+
+	cursor nadji_vezni_cur(cBrd Varchar2, cVrd Varchar2, nGod Number) is
+	  Select za_broj_dok, za_vrsta_dok, za_godina
+	  From vezni_dok
+	  Where Broj_dok= cBrd and Vrsta_dok=cVrd and Godina = nGod;
+    nadji_vezni nadji_vezni_cur % rowtype;
+
+    dDatIzvDok Date;
+    nBrRedCommit Number;
+
+Begin
+    nBrRedCommit := 0;
+
+    delete report_tmp_pdf;
+    insert into report_tmp_pdf(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,c17)
+                values(  '0RBR', 'GODINA', 'VRSTA_DOK', 'NAZIV_VR', 'BROJ_DOK', 'TIP_DOK', 'DATUM_DOK', 'DATUM_UNOSA', 'USER_ID'
+                       , 'PPARTNER', 'STATUS', 'BROJ_DOK1', 'DATUM_IZVORNOG_DOK', 'ZA_BROJ_DOK', 'ZA_VRSTA_DOK', 'ZA_GODINA', 'DAT_IZV_DOK') ;
+
+--    dbms_output.put_line(   lpad('Dokument : ',15)
+--                         || lpad('VR',2)      ||' '
+--                         || lpad('BRD',7)     ||' '
+--                         || lpad('GOD',4)     ||' '
+--                         || lpad('DATUM',10)
+--                       );
+--
+--    dbms_output.put_line(   lpad('-',15,'-')
+--                         || lpad('-',2,'-')      ||' '
+--                         || lpad('-',7,'-')     ||' '
+--                         || lpad('-',4,'-')     ||' '
+--                         || lpad('-',10,'-')
+--                       );
+--
+    open nadji_dok_cur;
+    loop
+    fetch nadji_dok_cur into nadji_dok;
+    exit when nadji_dok_cur %NotFound;
+         nBrRedCommit := nBrRedCommit + 1;
+--         nGodinaVeznog := null;
+--         cBrojVeznog := null;
+         -- PRIJEM ROBE
+         if nadji_dok.VRSTA_DOK IN( '4','5','30') then
+         lPomocna := PVezniDok.NadjiVezu( nadji_dok.vrsta_dok, nadji_dok.Godina, nadji_dok.Broj_Dok,
+                                          '3', nGodinaVeznog, cBrojVeznog );
+                     if nGodinaVeznog is not null and cBrojVeznog is not null Then
+                        dDatIzvDok := Pdokument.MojeVratiDatum(nGodinaVeznog, cBrojVeznog, '3');
+--                        dbms_output.put_line(lpad('Prijemnica: ',15) ||lpad('3',2)||' '
+--                                                                     ||lpad(cBrojVeznog,7)||' '
+--                                                                     ||nGodinaVeznog      ||' '
+--                                                                     || to_char(dDatIzvDok,'dd.mm.yyyy'));
+                     end if;
+
+         -- OTPREMA ROBE
+         elsif nadji_dok.VRSTA_DOK IN( '12','13','31') then
+         lPomocna := PVezniDok.NadjiVezu( nadji_dok.vrsta_dok, nadji_dok.Godina, nadji_dok.Broj_Dok,
+                                          '11', nGodinaVeznog, cBrojVeznog );
+                     if nGodinaVeznog is not null and cBrojVeznog is not null Then
+                        dDatIzvDok := Pdokument.MojeVratiDatum(nGodinaVeznog, cBrojVeznog, '11');
+--                        dbms_output.put_line(lpad('Otpremnica: ',15) ||lpad('11',2)||' '
+--                                                                     ||lpad(cBrojVeznog,7)||' '
+--                                                                     ||nGodinaVeznog      ||' '
+--                                                                     || to_char(dDatIzvDok,'dd.mm.yyyy'));
+                     end if;
+
+         -- PREDAJA ROBE IZ PROIZVODNJE U MAGACIN
+         elsif nadji_dok.VRSTA_DOK IN( '26','45','46') then
+         lPomocna := PVezniDok.NadjiVezu( nadji_dok.vrsta_dok, nadji_dok.Godina, nadji_dok.Broj_Dok,
+                                          '1', nGodinaVeznog, cBrojVeznog );
+                     if nGodinaVeznog is not null and cBrojVeznog is not null Then
+                        dDatIzvDok := Pdokument.MojeVratiDatum(nGodinaVeznog, cBrojVeznog, '1');
+--                        dbms_output.put_line(lpad('Predatnica: ',15) ||lpad('1',2)||' '
+--                                                                     ||lpad(cBrojVeznog,7)||' '
+--                                                                     ||nGodinaVeznog      ||' '
+--                                                                     || to_char(dDatIzvDok,'dd.mm.yyyy'));
+                     end if;
+         -- TREBOVANJE ROBE
+         elsif nadji_dok.VRSTA_DOK IN( '27','28','32') then
+         lPomocna := PVezniDok.NadjiVezu( nadji_dok.vrsta_dok, nadji_dok.Godina, nadji_dok.Broj_Dok,
+                                          '8', nGodinaVeznog, cBrojVeznog );
+                     if nGodinaVeznog is not null and cBrojVeznog is not null Then
+                        dDatIzvDok := Pdokument.MojeVratiDatum(nGodinaVeznog, cBrojVeznog, '8');
+--                        dbms_output.put_line(lpad('Trebovanje: ',15) ||lpad('8',2)||' '
+--                                                                     ||lpad(cBrojVeznog,7)||' '
+--                                                                     ||nGodinaVeznog      ||' '
+--                                                                     || to_char(dDatIzvDok,'dd.mm.yyyy'));
+                     end if;
+
+         -- TRANZIT
+         elsif nadji_dok.VRSTA_DOK IN( '74') then
+         lPomocna := PVezniDok.NadjiVezu( nadji_dok.vrsta_dok, nadji_dok.Godina, nadji_dok.Broj_Dok,
+                                          '73', nGodinaVeznog, cBrojVeznog );
+                     if nGodinaVeznog is not null and cBrojVeznog is not null Then
+                        dDatIzvDok := Pdokument.MojeVratiDatum(nGodinaVeznog, cBrojVeznog, '73');
+--                        dbms_output.put_line(lpad('Tranzit Ul: ',15) ||lpad('73',2)||' '
+--                                                                     ||lpad(cBrojVeznog,7)||' '
+--                                                                     ||nGodinaVeznog      ||' '
+--                                                                     || to_char(dDatIzvDok,'dd.mm.yyyy'));
+                     end if;
+         -- NIVELACIJE STAVKI - AUTOMATSKA
+         elsif nadji_dok.VRSTA_DOK IN( '90') then
+               open nadji_vezni_cur(nadji_dok.Broj_Dok, nadji_dok.vrsta_dok, nadji_dok.Godina);
+               fetch nadji_vezni_cur into nadji_vezni;
+                  lPomocna := PVezniDok.NadjiVezu( nadji_dok.vrsta_dok, nadji_dok.Godina, nadji_dok.Broj_Dok,
+                                                   nadji_vezni.za_vrsta_dok, nadji_vezni.za_godina,nadji_vezni.za_Broj_dok );
+                              if nGodinaVeznog is not null and cBrojVeznog is not null Then
+                                 dDatIzvDok := Pdokument.MojeVratiDatum(nadji_vezni.za_godina,nadji_vezni.za_Broj_dok, nadji_vezni.za_vrsta_dok);
+--                                 dbms_output.put_line(lpad('Niv stav za : ',15)
+--                                                                      || lpad(nadji_vezni.za_vrsta_dok,2)    ||' '
+--                                                                      || lpad(nadji_vezni.za_Broj_dok,7)     ||' '
+--                                                                      || nadji_vezni.za_godina               ||' '
+--                                                                      || to_char(dDatIzvDok,'dd.mm.yyyy')
+--                                                                      );
+                              end if;
+               close nadji_vezni_cur;
+         end If;
+
+         insert into report_tmp_pdf(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,c17)
+                values(  1, nadji_dok.GODINA, nadji_dok.VRSTA_DOK, nadji_dok.NAZIV_VR, nadji_dok.BROJ_DOK, nadji_dok.TIP_DOK
+                       , to_char(nadji_dok.DATUM_DOK,'dd.mm.yyyy'), to_char(nadji_dok.DATUM_unosa,'dd.mm.yyyy hh24:mi:ss'), nadji_dok.USER_ID
+                       , nadji_dok.PPARTNER, nadji_dok.STATUS, nadji_dok.BROJ_DOK1, to_char(nadji_dok.DATUM_IZVORNOG_DOK,'dd.mm.yyyy')
+--                       , nadji_dok.ZA_BROJ_DOK, nadji_dok.ZA_VRSTA_DOK, nadji_dok.ZA_GODINA,
+--                       to_char(nadji_dok.DATUM_IZV_DOK,'dd.mm.yyyy')
+                       , null, null, null, to_char(dDatIzvDok,'dd.mm.yyyy')
+                      ) ;
+
+         if dDatIzvDok is not null then
+            update dokument
+            set DATUM_IZVORNOG_DOK = dDatIzvDok
+            where broj_dok=nadji_dok.BROJ_DOK
+              and vrsta_dok = nadji_dok.VRSTA_DOK
+              and godina = nadji_dok.godina
+            ;
+         end if;
+
+         If nBrRedCommit > 200 then
+            commit;
+            nBrRedCommit := 0;
+         end If;
+         dDatIzvDok := NULL;
+
+    end loop;
+    close nadji_dok_cur;
+
+    commit;
+
+end;
+"REM WORKSPACETAB3",Query17,,18
+		SELECT
+	  		   D.GODINA,D.VRSTA_DOK,vrd.naziv naziv_vr,D.BROJ_DOK,D.TIP_DOK,D.DATUM_DOK,D.DATUM_UNOSA,D.USER_ID,D.PPARTNER,D.STATUS, D.BROJ_DOK1
+	  		 , D.DATUM_IZVORNOG_DOK
+
+		FROM
+		 dokument  d, vrsta_dok vrd
+		WHERE vrd.vrsta=d.vrsta_Dok
+--		  and nvl(d.broj_dok,'-9998887') !='-9998888'
+		  and D.VRSTA_DOK IN (     '4',  '5', '30'				-- PRIJEM ROBE
+				                , '12', '13', '31'				-- OTPREMA ROBE
+				                , '26', '45', '46'				-- PREDAJA ROBE IZ PROIZVODNJE U MAGACIN
+				                , '27', '28', '32'				-- TREBOVANJE ROBE
+				                , '74'							-- TRANZIT
+				                , '90'							-- NIVELACIJE STAVKI - AUTOMATSKA
+				               )
+--          and d.godina != 0
+          and D.DATUM_IZVORNOG_DOK is null
+		;
+"REM WORKSPACETAB4",izvorni.sql,,31
+--15428 dokumenata
+select distinct vrsta_dok,naziv_vr
+from
+(
+	SELECT
+		D.GODINA,D.VRSTA_DOK,vrd.naziv naziv_vr,D.BROJ_DOK,D.TIP_DOK,D.DATUM_DOK,D.DATUM_UNOSA,D.USER_ID,D.PPARTNER,D.STATUS, D.BROJ_DOK1
+		, D.DATUM_IZVORNOG_DOK
+		, vd.za_broj_dok, vd.za_vrsta_Dok, vd.za_godina
+	FROM
+	 dokument  d, vrsta_dok vrd
+	 ,(SELECT * FROM VEZNI_DOK where za_vrsta_dok not in ('41','14','24','90','10','9','2') ) VD
+	WHERE
+	vrd.vrsta=d.vrsta_Dok
+	and
+	(
+			D.VRSTA_DOK IN
+
+			(
+				SELECT VRSTA FROM VRSTA_DOK
+				WHERE
+				   INSTR(NAZIV,'POV')>0
+				OR INSTR(NAZIV,'STOR')>0
+	 		)
+	--or		D.VRSTA_DOK = '90'
+	)
+	and d.vrsta_dok not in('64','62')
+	and d.vrsta_dok not in('12','4')
+	AND d.godina = vd.godina (+) and d.vrsta_dok = vd.vrsta_dok  (+) and d.broj_dok = vd.broj_dok (+)
+
+	ORDER BY D.DATUM_DOK, D.DATUM_UNOSA
+)
+"REM WORKSPACETAB5",Report_tmp_pdf,,7
+select rowid, r.* from report_tmp_pdf r
+where c17 is not null--in ('DAT_IZV_DOK','4','5','30')
+--and c3 in ('VRSTA_DOK','90')
+order by c1
+       , decode(C7,'DATUM_DOK',c7,to_date(c7,'dd.mm.yyyy'))
+       , decode(C8,'DATUM_UNOSA',c8,to_date(c8,'dd.mm.yyyy hh24;mi:ss'))
+--,C8
+"REM WORKSPACETAB6","Provera dokumenata",,23
+select VRSTA_DOK,BROJ_DOK,GODINA,org_deo, d.broj_dok1, TIP_DOK
+     , DATUM_IZVORNOG_DOK, datum_dok, datum_unosa, user_id
+     , d.status
+from dokument d
+where
+--DATUM_IZVORNOG_DOK is not null
+--AND VRSTA_DOK IN (12,13)
+--AND
+DATUM_DOK > TO_DATE('19.01.2012','dd.mm.yyyy')
+AND DATUM_UNOSA>TO_DATE('20.01.2012 14:30:00','dd.mm.yyyy hh24:mi:ss')
+--and vrsta_dok='90'
+
+  and d.vrsta_Dok In(
+						   '4',  '5', '30'				-- PRIJEM ROBE
+						, '12', '13', '31'				-- OTPREMA ROBE
+						, '26', '45', '46'				-- PREDAJA ROBE IZ PROIZVODNJE U MAGACIN
+						, '27', '28', '32'				-- TREBOVANJE ROBE
+						, '74'							-- TRANZIT
+						, '90'							-- NIVELACIJE STAVKI - AUTOMATSKA
+                  )
+
+
+ORDER BY d.DATUM_DOK, d.DATUM_UNOSA  DESC
+"REM WORKSPACETAB7",DOKUMENT.sql,,157
+--27558 -- 20-1410
+--27675 -- 20-1414
+
+
+--96.05
+--10067 mag 91 umesto 6023 treba 9145
+
+--11787
+-- na 28
+SELECT   d.rowid,
+--d.datum_dok + d.valuta_placanja,
+--(select NABAVNA_SIFRA
+--FROM KATALOG_TRANZIT
+--where dobavljac = '342' and proizvod = d.proizvod
+--),
+D.*
+
+--, round(round(nvl(d.Kolicina * d.Cena*(1-d.Rabat/100) +
+--                  round(nvl(Z_TROSKOVI,0),2)
+--                 ,0)
+--             ,2) / kolicina * 1.02
+--       ,2)
+
+FROM
+
+-- dokument  d
+-- VEZNI_DOK d
+--,
+--komentar d
+--FROM
+stavka_Dok d --,
+--zavisni_troskovi d
+--ZAVISNI_TROSKOVI_STAVKE d
+--prosecni_cenovnik d
+
+
+--dokument@rubin  d
+--VEZNI_DOK@rubin d
+
+--komentar d
+--FROM
+--stavka_Dok@rubin d --,
+--zavisni_troskovi d
+--prosecni_cenovnik d
+WHERE d.godina = 2012
+--and d.org_deo = 104
+--and d.VRSTA_DOK in (10,11) --and d.status = 4
+--and d.proizvod=10989
+and (
+--         ( d.VRSTA_DOK = 1 and d.broj_dok in ('55')) --1351--
+--      or
+--          ( d.VRSTA_DOK =2 And d.BROJ_DOK in('2509')) --1351--
+--      or
+--          ( d.VRSTA_DOK = 3 And d.BROJ_DOK in('28423')) --1351
+--          ----
+--      or
+--          ( d.VRSTA_DOK = 4 And d.BROJ_DOK in('657')) --1351
+          ----
+
+--          ( d.VRSTA_DOK = 85 And d.BROJ_DOK in('6459')) --1351--
+--
+--      or
+--          ( d.VRSTA_DOK = 27 And d.BROJ_DOK in('25')) --1351--
+
+--      or
+--          ( d.VRSTA_DOK = 9 And d.BROJ_DOK in('222')) --1351--
+----
+----
+--      or
+--          ( d.VRSTA_DOK = 10 And d.BROJ_DOK in('164',165,166)) --1351--
+--      or
+          ( d.VRSTA_DOK in(11) And d.BROJ_DOK in('617')) --1351--
+      or
+          ( d.VRSTA_DOK in(12) And d.BROJ_DOK in('1')) --1351--
+----      or
+----          ( d.VRSTA_DOK in(13) And d.BROJ_DOK in('347')) --1351--
+----
+--      or
+--          ( d.VRSTA_DOK in(61) And d.BROJ_DOK in('1515')) --1351--
+--      or
+--          ( d.VRSTA_DOK in(27) And d.BROJ_DOK in('35')) --1351--
+
+--or
+--          ( d.VRSTA_DOK in(70) And d.BROJ_DOK in('19867')) --1351--
+--or
+--          ( d.VRSTA_DOK in(71) And d.BROJ_DOK in('19867')) --1351--
+--
+--or
+--          ( d.VRSTA_DOK in(73) And d.BROJ_DOK in('49')) --1351--
+--or
+--          ( d.VRSTA_DOK in(74) And d.BROJ_DOK in('3056')) --1351--
+--
+--      or
+--          ( d.VRSTA_DOK in(80) And d.BROJ_DOK in('64')) --1351--
+
+--
+    )
+--and proizvod in (4210,4211,4212,4213,3190)
+--  and org_deo = 11
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----            (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--              (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+-- 21101 -- 18379
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(20114)
+--order by stavka
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+
+--order by to_number(proizvod)
+
+
+--and REALIZOVANO <> kolicina
+--order by cena
+"REM WORKSPACETAB8","Prover_dok sa Veznim",,25
+--SELECT DISTINCT ORG_DEO
+--FROM
+--(
+select d.VRSTA_DOK,d.BROJ_DOK,d.GODINA,d.org_deo, d.broj_dok1, d.TIP_DOK
+     , d.DATUM_IZVORNOG_DOK, d.datum_dok, d.datum_unosa, d.user_id
+     , d.status
+     , vd.za_godina, vd.za_vrsta_Dok, vd.za_broj_dok
+from dokument d, vezni_dok vd
+where
+      d.DATUM_DOK > TO_DATE('19.01.2012','dd.mm.yyyy')
+  AND d.DATUM_UNOSA>TO_DATE('20.01.2012 14:30:00','dd.mm.yyyy hh24:mi:ss')
+  and d.broj_dok = vd.broj_dok (+) and d.godina = vd.godina (+) and d.vrsta_dok = vd.vrsta_dok (+)
+
+  and d.vrsta_Dok In(
+						   '4',  '5', '30'				-- PRIJEM ROBE
+						, '12', '13', '31'				-- OTPREMA ROBE
+						, '26', '45', '46'				-- PREDAJA ROBE IZ PROIZVODNJE U MAGACIN
+						, '27', '28', '32'				-- TREBOVANJE ROBE
+						, '74'							-- TRANZIT
+						, '90'							-- NIVELACIJE STAVKI - AUTOMATSKA
+                  )
+  and za_vrsta_dok not in('24','14','41')
+ORDER BY d.DATUM_DOK, d.DATUM_UNOSA
+--)
+--ORDER BY ORG_DEO
+"REM WORKSPACETAB9",Query9,,13
+select *
+from DOKUMENT d
+--from VEZNI_DOK d
+where
+
+--      (BROJ_DOK='1' AND d.vrsta_Dok='30' AND GODINA =2011)
+--OR
+--      (BROJ_DOK='27317' AND d.vrsta_Dok='3' AND GODINA =2010)
+--OR
+--      (BROJ_DOK='53' AND d.vrsta_Dok='5' AND GODINA =2011)
+--ORDER BY VRSTA_DOK
+d.vrsta_Dok='90'
+ORDER BY d.DATUM_DOK, d.DATUM_UNOSA
+"REM WORKSPACETAB10","Vidi Vrste dok",,2
+select * from vrsta_Dok
+where UPPER(instr(naziv,'TREB'))>0
+"REM WORKSPACETAB11","Vezni dok",,5
+select * from vezni_Dok
+where vrsta_dok ='90'              
+  and broj_dok =
+  and godina = 2011
+order by godina,to_number(broj_dok)

@@ -1,0 +1,104 @@
+"REM WORKSPACETAB0","Upit ver 0.sql",,89
+select
+        d.datum_dok, d.godina, d.vrsta_Dok, d.broj_dok, d.tip_dok, d.ppartner, d.pp_isporuke, d.mesto_isporuke, d.org_Deo, d.broj_dok1, d.status
+     , sd.proizvod, sd.kolicina, sd.faktor, sd.k_robe, sd.lot_Serija
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+
+
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  and sd.lot_Serija = '395/12'
+--  AND D.VRSTA_DOK <> 11
+  -----------------------------
+  -- ostali uslovi
+--  AND D.BROJ_DOK  = 2
+-- AND d.vrsta_Dok in (1)
+--  and d.godina = 2012
+
+---  AND TIP_DOK = 11
+--  AND D.ORG_DEO = 104
+--  and d.datum_dok between to_date('05.02.2011','dd.mm.yyyy') and to_date('09.02.2011','dd.mm.yyyy')
+--  and d.ppartner= 2965
+
+----and sd.faktor <> 1
+--  and SD.proizvod in (3764)
+--  and SD.proizvod IN (
+--							  Select SIFRA from proizvod
+--							where tip_proizvoda = 1
+--							  and '%'||upper(naziv)||'%' like '%MARG%'
+--                     )
+----and sd.kolicina <> sd.realizovano
+--  and (k_robe <>0 or d.vrsta_Dok = 80)
+--and      d.vrsta_dok in ('11')
+--  and d.broj_dok = 19
+--and (
+----          ( d.VRSTA_DOK = 3 And d.BROJ_DOK in(6723)) --1351--
+--------      or
+--          ( d.VRSTA_DOK = 2 And d.BROJ_DOK in('868')) --1351--
+------
+--    )
+----
+----AND D.ORG_DEO = Z.ORG_dEO
+----AND SD.PROIZVOD = Z.PROIZVOD  (+)
+--
+----and proizvod in (select proizvod from stavka_dok
+----where godina = 2010
+---- and vrsta_dok = 3
+---- and broj_dok = 21028)
+--
+----  AND NVL ( SD.CENA , 0 ) <>  NVL ( SD.CENA1 , 0 )
+----
+----  and d.status >= 1
+----  and ( nvl(sd.cena1,0) <= 0 or nvl(sd.cena,0) <= 0 )
+----  and d.vrsta_dok  IN ( 1,26,45,46,
+----                        8,27,28,32 )
+----  and tip_dok = 23
+----  and sd.stavka = 1
+----  and d.broj_dok in (10)
+---- and d.broj_dok1 in (1595)
+----   AND SD.CENA <> 18
+---- PProdajniCenovnik.Cena( SD.Proizvod,D.Datum_Dok,SD.Valuta,SD.Faktor)
+--  and d.datum_dok > to_date('23.10.2011','dd.mm.yyyy')
+----  and sd.proizvod = 4465
+----AND D.VRSTA_DOK = 3
+----and d.status > 0
+----and sd.kolicina <> sd.realizovano
+----and k_robe <> 0
+----and nvl(sd.cena1,0) = 0
+--  and proizvod in ('6845','5304')
+----order by --to_number(sd.proizvod),
+------d.datum_dok ,
+----to_number(sd.broj_dok)
+----to_number(sd.proizvod)--,sd.stavka -- ,
+----
+------, d.broj_dok , stavka
+----ORDER BY TO_NUMBER(PROIZVOD),
+----         D.DATUM_UNOSA,
+----         TO_NUMBER(d.vrsta_dok),
+----         TO_NUMBER(d.BROJ_dok)
+----         --datum_dok--, stavka--
+----
+--and sd.stavka in (1,3)
+--
+--AND CENA1 IS NOT NULL
+--AND CENA1 <> OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, 1, sd.valuta,0)
+--and nvl(sd.proc_vlage) > 0
+order by SD.PROIZVOD, d.datum_dok,d.datum_unosa;
+--ORDER BY STAVKA
+"REM WORKSPACETAB1",Query3,,4
+select * from vezni_dok
+where godina = 2012
+  and vrsta_dok='3'
+  and broj_dok ='5915'
+"REM WORKSPACETAB2",Query5,,4
+select * from stavka_dok
+where godina = 2012
+  and vrsta_dok='11'
+  and broj_dok ='8564'
+"REM WORKSPACETAB3",Query6,,3
+Select * from zalihe_analitika
+where org_Deo=88
+  and proizvod = 44

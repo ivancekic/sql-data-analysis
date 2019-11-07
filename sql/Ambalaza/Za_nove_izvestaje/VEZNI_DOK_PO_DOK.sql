@@ -1,0 +1,16 @@
+  -- 9729 ok                                          -- status 1
+  -- 9727 stornirana                                  -- status 4
+  -- 9728 ima povracaj - a povratnica nije stornirana -- status 5 , povratnica nije stornirana -- status 1
+  -- 9730 ima povracaj - a povratnica je stornirana   -- status 1 , povratnica je stornirana   -- status 4
+
+--Select vd.* from vezni_dok vd
+--where vd.godina    = 2009 and vd.vrsta_dok = 11 and vd.broj_dok   in ( '9727' ) and za_vrsta_Dok not in (10,14,41)
+--UNION
+--Select vd.* from vezni_dok vd
+--where vd.godina    = 2009 and vd.vrsta_dok = 11 and vd.broj_dok   in ( '9728' ) and za_vrsta_Dok not in (10,14,41)
+--UNION
+--Select vd.* from vezni_dok vd
+--where vd.godina    = 2009 and vd.vrsta_dok = 11 and vd.broj_dok   in ( '9729' ) and za_vrsta_Dok not in (10,14,41)
+--UNION
+--Select vd.* from vezni_dok vd
+--where vd.godina    = 2009 and vd.vrsta_dok = 11 and vd.broj_dok   in ( '9730' ) and za_vrsta_Dok not in (10,14,41)

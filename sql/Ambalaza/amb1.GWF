@@ -1,0 +1,177 @@
+"REM WORKSPACETAB0",Query1,,0
+"REM WORKSPACETAB1",DOKUMENT.sql,,71
+SELECT   d.rowid,
+--d.datum_dok + d.valuta_placanja,
+D.*
+FROM
+dokument d
+--VEZNI_DOK d
+--,
+--komentar d
+--FROM
+--stavka_Dok d --, vezni_dok vd
+--update dokument
+--set datum_dok = to_date('03.09.2007','dd.mm.yyyy')
+WHERE d.godina = 2010
+and (
+          ( VRSTA_DOK = 3 And BROJ_DOK in('7629')) --1351--
+--       OR
+--          ( VRSTA_DOK = 2 And BROJ_DOK in('501',347)) --1351
+    )
+
+--  and org_deo = 101
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(7627,7581)
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+"REM WORKSPACETAB2",Query3,,2
+SELECT * FROM KORISNIK
+WHERE USERNAME = 'VLADIMIRP'
+"REM WORKSPACETAB3",Query4,,2
+Select * from partner_magacin_flag
+where ppartner = 5602
+"REM WORKSPACETAB4",Query6,,26
+Select sd.Proizvod Sifra, P.Naziv,
+       ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+       ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+       ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje,
+       P.Jed_Mere JedMere
+From Dokument d, Stavka_Dok sd,  Proizvod p
+Where d.Vrsta_Dok = sd.Vrsta_Dok And
+      d.Broj_Dok = sd.Broj_Dok And
+      d.Godina = sd.Godina And
+      sd.Proizvod = P.Sifra And
+      (d.Tip_Dok In ( 15, 203, 204, 99, 301, 401, 402, 61, 60 )  or d.vrsta_Dok = 33) And
+d.Org_Deo In (Select Magacin
+            From Partner_magacin_Flag, Poslovni_Partner
+            Where PPartner = Sifra And
+                  Teren = 3853 And PPartner Like '5602') And
+--               d.PPartner In ( Select Sifra From Poslovni_Partner
+--                                       Where Teren = nSifraTerena ) And
+      d.Status > 0 And
+      d.Datum_Dok Between To_Date ( '01.01.2010','dd.mm.yyyy' ) And sysdate
+      And sd.Proizvod In ( Select Sifra
+                              From Proizvod
+                              Where Tip_Proizvoda = '8' ) And
+--               sd.Proizvod Like NVL( cProizvod, '%' ) And
+      sd.K_Robe != 0
+Group By sd.Proizvod, P.Naziv, P.Jed_Mere
+Order By P.Naziv;
+"REM WORKSPACETAB5",Query7,,26
+Select d.tip_dok, sd.Proizvod Sifra, P.Naziv,
+--       ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+--       ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+--       ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje,
+       P.Jed_Mere JedMere
+From Dokument d, Stavka_Dok sd,  Proizvod p
+Where d.Vrsta_Dok = sd.Vrsta_Dok And
+      d.Broj_Dok = sd.Broj_Dok And
+      d.Godina = sd.Godina And
+      sd.Proizvod = P.Sifra And
+--      (d.Tip_Dok In ( 15, 203, 204, 99, 301, 401, 402, 61, 60 )  or d.vrsta_Dok = 33) And
+d.Org_Deo In (Select Magacin
+            From Partner_magacin_Flag, Poslovni_Partner
+            Where PPartner = Sifra And
+                  Teren = 3853 And PPartner Like '5602') And
+--               d.PPartner In ( Select Sifra From Poslovni_Partner
+--                                       Where Teren = nSifraTerena ) And
+      d.Status > 0 And
+      d.Datum_Dok Between To_Date ( '01.01.2010','dd.mm.yyyy' ) And sysdate
+      And sd.Proizvod In ( Select Sifra
+                              From Proizvod
+                              Where Tip_Proizvoda = '8' ) And
+--               sd.Proizvod Like NVL( cProizvod, '%' ) And
+      sd.K_Robe != 0
+--Group By sd.Proizvod, P.Naziv, P.Jed_Mere
+Order By P.Naziv;
+"REM WORKSPACETAB6",Query13,,19
+         Select pp.teren, obl.naziv naziv_ter, pp.sifra, pp.naziv  naziv_partner, sd.Proizvod, P.Naziv pro_naziv,
+                ( Sum ( Kolicina * Faktor * Decode( K_Robe, 1, 1, 0 ) ) ) Ulaz,
+                ( Sum ( Kolicina * Faktor * Decode( K_Robe, -1, 1, 0 ) ) ) Izlaz,
+                ( Sum ( Kolicina * Faktor * K_Robe ) ) Stanje,
+                p.Jed_Mere JedMere
+         From Dokument d, Stavka_Dok sd, Proizvod p, Poslovni_partner pp, Oblast Obl
+         Where (d.Tip_Dok In ( 14, 15, 203, 204, 99, 301, 402, 61, 60 ) or d.vrsta_Dok = 33)
+           And d.Status > 0
+           And d.Org_Deo In (Select Magacin From Partner_magacin_Flag, Poslovni_Partner pp
+                             Where PPartner Between 5602 And 5602  )
+           And d.Datum_Dok Between To_Date('01.01.2010','dd.mm.yyyy') And sysdate
+--           And Teren Between nTerenOd And nTerenDo
+           And sd.Proizvod In ( Select Sifra From Proizvod Where Tip_Proizvoda = '8' )
+--           And sd.Proizvod Between cProizvodOd And cProizvodDo
+           And sd.K_Robe != 0
+           and d.Vrsta_Dok = sd.Vrsta_Dok And d.Broj_Dok = sd.Broj_Dok And d.Godina = sd.Godina
+           And sd.Proizvod = p.Sifra And d.ppartner = pp.sifra and Obl.Id = pp.Teren
+         Group By pp.teren, obl.naziv, pp.sifra, pp.naziv, sd.Proizvod, P.Naziv, P.Jed_Mere
+         Order By pp.teren, pp.naziv, P.Naziv;
+"REM WORKSPACETAB7",Query8,,6
+Select d.rowid, d.broj_dok, d.tip_dok, d.org_deo, d.ppartner, pmf.ppartner, pposlovnipartner.naziv(pmf.ppartner) naz
+--d.*
+From Dokument d, Partner_magacin_Flag pmf
+Where d.Org_Deo = pmf.Magacin
+  and d.tip_dok = 103
+--and org_Deo = 3238
+"REM WORKSPACETAB8",Query9,,2
+select * from nacin_fakt
+where tip in (14,15,103)
+"REM WORKSPACETAB9",Query10,,4
+Select * from dokument
+where godina = 2010
+and vrsta_Dok = 3
+and broj_dok = '9146'
+"REM WORKSPACETAB10",Query11,,2
+select * from sekvencaorg
+where org_Deo = 3238
+"REM WORKSPACETAB11",Query5,,3
+Select * from poslovni_partner
+where sifra = 5602 --a ID magacina je 3238
+
+"REM WORKSPACETAB12",Query12,,1
+exec generisiStanjeZaliha(3238,sysdate,true)

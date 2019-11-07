@@ -1,0 +1,111 @@
+"REM WORKSPACETAB0","org osn pod",,2
+SELECT * FROM ORG_DEO_OSN_PODACI
+ORDER BY ORG_DEO
+"REM WORKSPACETAB1","dod tip F-ja",,3
+Select POrganizacioniDeo.OrgDeoOsnPod( '1383', 'DODTIP')
+, ltrim(rtrim(POrganizacioniDeo.OrgDeoOsnPod( 1380, 'DODTIP'))) oo
+from dual
+"REM WORKSPACETAB2",Sekvecna,,5
+SELECT * FROM SEKVENCA
+WHERE
+INSTR(NAZIV,'POPISNA_LISTA_MP') > 0
+or
+NAZIV='BROJ_NIVELACIJE'
+"REM WORKSPACETAB3",Query14,,5
+SELECT * FROM SEKVENCAorg
+WHERE
+INSTR(NAZIV,'POPISNA_LISTA_MP') > 0
+or
+NAZIV='BROJ_NIVELACIJE'
+"REM WORKSPACETAB4",Query13,,3
+Select * from dokument
+where godina = 2013
+  and vrsta_dok = '80'
+"REM WORKSPACETAB5","MP POPIS",,1
+select * from mp_popis
+"REM WORKSPACETAB6","MP POPIS STAVKA",,1
+select * from mp_popis_stavka
+"REM WORKSPACETAB7",Query24,,1
+DESC mp_popis_stavka
+"REM WORKSPACETAB8",Query23,,6
+SELECT O.ID,O.NAZIV
+FROM ORGANIZACIONI_DEO O
+   , ORG_DEO_OSN_PODACI OD
+WHERE OD.ORG_DEO = O.ID
+  AND OD.DODATNI_TIP='MP'
+ORDER BY ID
+"REM WORKSPACETAB9","RAZLICITI PROIZVODI",,48
+create OR REPLACE view MP_PROIZVODI_PRIMLJENI(POSLOVNICA,POSLOVNICA_NAZIV, PROIZVOD,PRO_NAZIV,PGR,PGR_NAZIV,GRP,GRP_NAZIV)
+AS
+select
+		DISTINCT D.POSLOVNICA, od.naziv POSLOVNICA_NAZIV
+		       , sd.proizvod, P.NAZIV
+		       , P.POSEBNA_GRUPA PGR, PGR.NAZIV PGR_NAZIV
+		       , P.GRUPA_PROIZVODA GRP, GR.NAZIV GRP_NAZIV
+from stavka_dok sd, dokument d , PROIZVOD P
+   , GRUPA_PR  GR
+   , POSEBNA_GRUPA PGR
+   , organizacioni_deo od
+Where d.godina in (2013)
+  AND D.VRSTA_dok='11'
+  AND D.TIP_DOK = 231
+  AND D.STATUS > 0
+  and od.id = d.poslovnica
+  AND sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+  AND sd.PROIZVOD = P.SIFRA
+  AND GR.ID=P.GRUPA_PROIZVODA
+  AND PGR.GRUPA=P.POSEBNA_GRUPA
+
+
+
+order by D.POSLOVNICA,
+         PGR.NAZIV, GR.NAZIV
+       , P.NAZIV
+/
+Drop public synonym MP_PROIZVODI_PRIMLJENI
+/
+
+Create public synonym MP_PROIZVODI_PRIMLJENI FOR MILAN.MP_PROIZVODI_PRIMLJENI ;
+/
+-- ako je paket ili funkcija
+--GRANT EXECUTE ON MILAN.MP_PROIZVODI_PRIMLJENI TO EXE
+/
+--
+--------------------------------------------------------
+--------------------------------------------------------
+---- FULL_ACCESS      -- PL / SQL
+---- RESTRICT_ACCESS  -- FORMS
+/
+-- ako je PDokStampa, view
+GRANT SELECT ON MILAN.MP_PROIZVODI_PRIMLJENI TO FULL_ACCESS
+/
+------
+GRANT SELECT ON MILAN.MP_PROIZVODI_PRIMLJENI TO RESTRICT_ACCESS
+----
+----
+"REM WORKSPACETAB10",Query11,,2
+SELECT * FROM MP_PROIZVODI_PRIMLJENI
+where length(pro_naziv)=60
+"REM WORKSPACETAB11",Query16,,2
+SELECT PAplikacijaForme.POLJA_FORMAT('UNOSPOPISA_MP1.FMX','STAVKA','cena')
+FROM DUAL
+"REM WORKSPACETAB12",Query17,,1
+SELECT * FROM APLIKACIJA_FORME_DEF
+"REM WORKSPACETAB13",Query15,,1
+SELECT max(length(pro_naziv)) FROM MP_PROIZVODI_PRIMLJENI
+"REM WORKSPACETAB14",Query10,,15
+select
+		DISTINCT D.POSLOVNICA
+from stavka_dok sd, dokument d , PROIZVOD P
+   , GRUPA_PR  GR
+   , POSEBNA_GRUPA PGR
+Where d.godina in (2013)
+  AND D.VRSTA_dok='11'
+  AND D.TIP_DOK = 231
+--  AND D.POSLOVNICA = 1383
+  AND D.STATUS > 0
+  AND sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+  AND sd.PROIZVOD = P.SIFRA
+  AND GR.ID=P.GRUPA_PROIZVODA
+  AND PGR.GRUPA=P.POSEBNA_GRUPA
+

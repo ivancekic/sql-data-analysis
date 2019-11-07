@@ -1,0 +1,183 @@
+"REM WORKSPACETAB0",upit_vd_d_d1.sql,,18
+Select d.status, D.GODINA DGOD, d.vrsta_dok DVR, D.BROJ_DOK DBR, d.ppartner,
+       PVRSTADOK.NAZIV(D.VRSTA_DOK) NAZIV, d.tip_dok DTIP, pnacinfakt.naziv(d.tip_dok) naziv,
+       D1.GODINA D1GOD, D1.VRSTA_DOK D1VR, D1.BROJ_DOK D1BR, D1.TIP_DOK D1TIP, pnacinfakt.naziv(d1.tip_dok) naziv,
+       SD1.PROIZVOD, SD1.KOLICINA, SD1.K_ROBE, SD1.FAKTOR, SD1.CENA
+from vezni_dok vd, dokument d, DOKUMENT D1, stavka_dok sd1
+where vd.godina     = 2009
+  and vd.vrsta_dok  = 11
+  -- 9929 ok                                          -- status 1
+  -- 9727 stornirana                                  -- status 4
+  -- 9728 ima povracaj - a povratnica nije stornirana -- status 5 , povratnica nije stornirana -- status 1
+  -- 9730 ima povracaj - a povratnica je stornirana   -- status 1 , povratnica je stornirana   -- status 4
+  and vd.broj_dok   in ( '9727', '9728', '9729', '9730')
+  and za_vrsta_Dok not in (10,14,41)
+  and vd.godina = d.godina and vd.vrsta_dok = d.vrsta_dok and vd.broj_dok = d.broj_dok
+  and Vd.ZA_godina = d1.godina and vd.ZA_vrsta_dok = d1.vrsta_dok and vd.ZA_broj_dok = d1.broj_dok
+  and d1.godina = Sd1.godina and d1.vrsta_dok = Sd1.vrsta_dok and d1.broj_dok = Sd1.broj_dok
+
+
+"REM WORKSPACETAB1",vezni.sql,,15
+Select d.tip_dok, vd.*,
+       vd1.za_godina, vd1.za_vrsta_dok, vd1.za_broj_dok
+from dokument d, vezni_dok vd, vezni_dok vd1
+where vd.godina     = 2009
+  and (
+          ( vd.vrsta_dok  = 11 and vd.broj_dok   in ('9727', '9728', '9729', '9730'))
+       or
+          ( vd.za_vrsta_dok  = 11 and vd.za_broj_dok   in ( '9727', '9728', '9729', '9730'))
+      )
+  and vd.za_vrsta_Dok not in (10,11,14,41)
+  and vd.vrsta_Dok not in (10,14,41)
+
+  and d.godina = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok = vd.broj_dok
+  and vd1.godina = vd.za_godina and vd1.vrsta_dok = vd.za_vrsta_dok and vd1.broj_dok = vd.za_broj_dok
+  and vd1.za_vrsta_Dok not in (10,41)
+"REM WORKSPACETAB2",za_stanje_amb.sql,,30
+Select d.status st, d.godina god,
+       d.vrsta_dok vrd, pvrstadok.naziv(d.vrsta_Dok) naziv,
+       d.broj_dok brd,
+       d.tip_dok tip, pnacinfakt.naziv(d.tip_dok) naziv,
+       d.org_deo mag, d.broj_dok1 brd1,
+       d.ppartner ppar,d.pp_isporuke ppisp,d.mesto_isporuke misp,
+       sd.proizvod pro, sd.cena, sd.kolicina kol, sd.faktor fak, sd.k_robe kr, sd.cena1,
+       sd.kolicina * sd.faktor * sd.k_robe kol_ui, sd.kolicina * sd.faktor * sd.k_robe * sd.cena1 vred_ui
+from dokument d, stavka_dok sd, proizvod p
+where d.godina   = 2009 and d.status > 0
+--  and d.vrsta_dok not in (10,61)
+--  and d.vrsta_dok not in (3,4,5,11,13,31,30)
+  and d.ppartner = 406
+  and p.tip_proizvoda = 8
+--  and (d.vrsta_dok,d.tip_dok) in (select  3, 15 from dual     -- prijemnica           --  prijem ambalaze
+--                                  Union
+--                                  select  4, 15 from dual     -- storno prijemnica    --  prijem ambalaze
+--                                  Union
+--                                  select 13, 401 from dual    -- povratnica po otp    --  povrat.amb. od kupca
+--                                  Union
+--                                  select  5, 301 from dual    -- povratnica po prijem --  pov amb dobavljacu
+--                                  Union
+--                                  select 31, 401 from dual    -- povratnica po otpre  --  povrat.amb. od kupca
+--                                  Union
+--                                  select 30, 301 from dual    -- storno pov. po prije --  povrat.amb. dobavlj.
+--                                  )
+  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  and p.sifra  = sd.proizvod
+order by d.rowid
+
+"REM WORKSPACETAB3",!FINALE_OK.sql,,59
+Select d.status st, d.godina god,
+       d.vrsta_dok vrd, pvrstadok.naziv(d.vrsta_Dok) naziv,
+       d.broj_dok brd,
+       d.tip_dok tip, pnacinfakt.naziv(d.tip_dok) naziv,
+       d.org_deo mag, d.broj_dok1 brd1,
+       d.ppartner ppar,d.pp_isporuke ppisp,d.mesto_isporuke misp,
+       sd.proizvod pro,nvl(sd.cena,PPlanskiCenovnik.Cena(sd.Proizvod ,d.Datum_Dok,'YUD', sd.faktor )) cena, sd.kolicina kol, sd.faktor fak,
+       case when d.tip_dok = 203 Then
+                 sd.k_robe * -1
+            when d.tip_dok = 402 Then
+                 sd.k_robe * -1
+            else
+                 sd.k_robe
+       end k_r,
+       nvl(sd.cena1,PPlanskiCenovnik.Cena(sd.Proizvod ,d.Datum_Dok,'YUD', 1 )) cena1,
+       sd.kolicina * sd.faktor * (case when d.tip_dok = 203 Then
+                                            sd.k_robe * -1
+                                       when d.tip_dok = 402 Then
+                                            sd.k_robe * -1
+                                       else
+                                            sd.k_robe
+                                   end )
+                                    kol_ui,
+       sd.kolicina * sd.faktor * (case when d.tip_dok = 203 Then
+                                            sd.k_robe * -1
+                                       when d.tip_dok = 402 Then
+                                            sd.k_robe * -1
+                                       else
+                                            sd.k_robe
+                                   end ) * nvl(sd.cena1,PPlanskiCenovnik.Cena(sd.Proizvod ,d.Datum_Dok,'YUD', 1 )) vred_ui
+from dokument d, stavka_dok sd, proizvod p
+where d.godina   = 2009 and d.status > 0
+  and d.ppartner = 2844
+  and p.tip_proizvoda = 8
+  AND D.ORG_DEO IN 3016
+  and (d.vrsta_dok,d.tip_dok) in (--IZLAZ AMBALAZE UZ ROBU
+                                  select  3, 15 from dual     -- prijemnica           --  prijem ambalaze
+                                  Union
+                                  select  4, 15 from dual     -- storno prijemnica    --  prijem ambalaze
+                                  Union
+                                  select  5, 301 from dual    -- povratnica po prijem --  pov amb dobavljacu
+                                  Union
+                                  select 30, 301 from dual    -- storno pov. po prije --  povrat.amb. dobavlj.
+                                  --ULAZ AMBALAZE -- RAZDUZENJE KUPCA
+                                  Union
+                                  select 63, 203 from dual    -- OTP AMB KUPAC --  KOMP. KROZ PROD.AMB.
+                                  Union
+                                  select 63, 203 from dual    -- OTP AMB KUPAC --  KOMP. KROZ PROD.AMB.
+                                  Union
+                                  select 64, 203 from dual    -- STORNO OTP AMB KUPAC --  KOMP. KROZ PROD.AMB.
+                                  Union
+                                  select 13, 402 from dual    -- POV PO OTP --  POV. AMB. KOMP I RAZD
+                                  Union
+                                  select 31, 402 from dual    -- STORNO POV PO OTP --  POV. AMB. KOMP I RAZD
+                                  )
+  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  and p.sifra  = sd.proizvod
+order by d.rowid
+
+"REM WORKSPACETAB4",Mag_flag.sql,,2
+Select * from partner_magacin_flag
+where ppartner = 12
+"REM WORKSPACETAB5",Interna_dok_vd.sql,,21
+Select * from vezni_dok d
+where godina = 2009
+  and
+      (
+           (d.vrsta_dok = 1  and d.broj_dok in ('3','4'))
+        or (d.vrsta_dok = 11 and d.broj_dok in ('9743'))
+        or (d.vrsta_dok = 61 and d.broj_dok in ('9743'))
+        or (d.vrsta_dok = 3  and d.broj_dok in ('6831'))
+        or (d.vrsta_dok = 3  and d.broj_dok in ('6832'))
+        or (d.vrsta_dok = 4  and d.broj_dok in ('40'))
+        or (d.vrsta_dok = 1  and d.broj_dok in ('5','6'))
+        or (d.vrsta_dok = 26 and d.broj_dok in ('1','2'))
+        or (d.vrsta_dok = 11 and d.broj_dok in ('9744'))
+        or (d.vrsta_dok = 61 and d.broj_dok in ('9744'))
+        or (d.vrsta_dok = 12 and d.broj_dok in ('57'))
+        or (d.vrsta_dok = 62 and d.broj_dok in ('13'))
+        or (d.vrsta_dok = 1  and d.broj_dok in ('7','8'))
+        or (d.vrsta_dok = 45 and d.broj_dok in ('1','2'))
+      )
+  and za_vrsta_dok <> 29
+Order by rowid
+"REM WORKSPACETAB6",Interna_dok.sql,,31
+Select d.status st, d.godina god,
+       d.vrsta_dok vrd, pvrstadok.naziv(d.vrsta_Dok) naziv,
+       d.broj_dok brd,
+       d.tip_dok tip, pnacinfakt.naziv(d.tip_dok) naziv,
+       d.org_deo mag, d.broj_dok1 brd1,
+       d.ppartner ppar,d.pp_isporuke ppisp,d.mesto_isporuke misp,
+       sd.proizvod pro,nvl(sd.cena,PPlanskiCenovnik.Cena(sd.Proizvod ,d.Datum_Dok,'YUD', sd.faktor )) cena, sd.kolicina kol, sd.faktor fak, sd.k_robe,
+       nvl(sd.cena1,PPlanskiCenovnik.Cena(sd.Proizvod ,d.Datum_Dok,'YUD', 1 )) cena1
+from dokument d, stavka_dok sd, proizvod p
+where d.godina   = 2009 and d.status > 0
+  and k_robe <> 0 and d.org_Deo = 104 and p.tip_proizvoda = 8
+  and (
+           (d.vrsta_dok = 1  and d.broj_dok in ('3','4'))
+        or (d.vrsta_dok = 11 and d.broj_dok in ('9743'))
+        or (d.vrsta_dok = 61 and d.broj_dok in ('9743'))
+        or (d.vrsta_dok = 3  and d.broj_dok in ('6831'))
+        or (d.vrsta_dok = 3  and d.broj_dok in ('6832'))
+        or (d.vrsta_dok = 4  and d.broj_dok in ('40'))
+        or (d.vrsta_dok = 1  and d.broj_dok in ('5','6'))
+        or (d.vrsta_dok = 26 and d.broj_dok in ('1','2'))
+        or (d.vrsta_dok = 11 and d.broj_dok in ('9744'))
+        or (d.vrsta_dok = 61 and d.broj_dok in ('9744'))
+        or (d.vrsta_dok = 12 and d.broj_dok in ('57'))
+        or (d.vrsta_dok = 62 and d.broj_dok in ('13'))
+        or (d.vrsta_dok = 1  and d.broj_dok in ('7','8'))
+        or (d.vrsta_dok = 45 and d.broj_dok in ('1','2'))
+     )
+  and d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  and p.sifra  = sd.proizvod
+order by d.rowid
+

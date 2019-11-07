@@ -1,0 +1,683 @@
+"REM WORKSPACETAB0",!!!!!!!!!!!!!!!!provera_ok.sql,,40
+select *
+from
+(
+Select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+--     , null pro, null kol, null fakt, null cena, null cena1
+     , trim(POrganizacioniDeo.OrgDeoOsnPod( d.org_Deo, 'DODTIP')) dod_tip
+from dokument d
+where godina = &God
+  and vrsta_Dok = 90
+--  AND D.ORG_DEO BETWEEN &nOrgOd and &nOrgDo
+  AND D.ORG_DEO = &nOrg
+  and (d.godina , d.vrsta_Dok, d.broj_dok ) not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+  and d.org_deo not in (select magacin from partner_magacin_flag)
+  and d.status >=1
+union
+
+select d.status, d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+--     , sd.proizvod pro, sd.kolicina kol, sd.faktor fakt, sd.cena, sd.cena1
+     , trim(POrganizacioniDeo.OrgDeoOsnPod( d.org_Deo, 'DODTIP')) dod_tip
+from dokument d, stavka_dok sd
+where d.godina = &God
+--  and d.vrsta_Dok in (3,4,5,30,11,12,13,31,74)
+  and d.vrsta_Dok in (11,12,13,31,74)
+  and k_robe<> 0
+  and sd.valuta = 'YUD'
+  AND D.ORG_DEO BETWEEN &nOrgOd and &nOrgDo
+  and (d.godina , d.vrsta_Dok, d.broj_dok )
+       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+  and sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+--  and round(sd.cena*sd.faktor,4) <> sd.cena1
+  and sd.cena <> round(sd.cena1*sd.faktor,4)
+  And d.org_deo not in (select magacin from partner_magacin_flag) And d.status >=1
+group by d.status, d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+--       , sd.proizvod, sd.kolicina, sd.faktor, sd.cena, sd.cena1
+)
+where dod_tip like 'VP%'
+  and org_deo not between 113 and 118
+  and org_deo = &nOrg
+--order by org_deo, datum_unosa, datum_dok, vrsta_dok
+order by datum_dok, datum_unosa--to_number(vrsta_dok), to_number(broj_dok)
+"REM WORKSPACETAB1",DOKUMENT.sql,,77
+SELECT   d.rowid,
+--d.datum_dok + d.valuta_placanja,
+D.*
+FROM
+--dokument  d
+VEZNI_DOK d
+--,
+--komentar d
+--FROM
+--stavka_Dok d --,
+--vezni_dok d
+WHERE
+--d.godina = 2011
+--and d.org_deo = 104
+--AND D.BROJ_DOK1 = 42
+--and d.vrsta_Dok=12
+--and
+    (
+          ( d.godina = 2011 and d.VRSTA_DOK = 12 and d.broj_dok = '111') --1351--
+      or
+          ( d.godina = 2010 and d.VRSTA_DOK = 11 And d.BROJ_DOK in('27824')) --1351--
+
+    )
+--and proizvod in (3338,4412,4413,4414,4418)
+--  and org_deo = 11
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+-- 21101 -- 18379
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(7627,7581)
+--order by stavka
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+"REM WORKSPACETAB2",!!!!LAST_OK_Napravi.sql,,93
+DECLARE
+  nGodinaDok        Number      := 2011;
+--  cBrojDok          Varchar2(9) := '6383';
+  nOrgDeo           NUMBER      := 105;
+
+  cDodatniTip       Varchar2(20);
+  cBrojNivelacije   Varchar2(9);
+  cBrojNivelacije1  Varchar2(9);
+  cVrstaNivelacije  Varchar2(3);
+  cTrebaNivelacija  Varchar2(2) := 'DA';
+  nUk Number := 0;
+
+  cPraviNiv  Varchar2(2) := 'DA';
+
+  Cursor ZaNiv_cursor Is
+
+	select
+	d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	from dokument d, stavka_dok sd
+	where d.godina = nGodinaDok
+--	  and d.vrsta_Dok in (3,4,5,30,11,12,13,31)
+      and d.vrsta_Dok in (11,12,13,31,74)
+      And k_robe <> 0
+	  AND D.ORG_DEO =nOrgDeo
+	  and (d.godina , d.vrsta_Dok, d.broj_dok )
+	       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+	  and sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+	  and sd.cena <> round(sd.cena1*sd.faktor,4)
+	  And d.status >=1
+	group by d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+	order by org_deo, datum_unosa, datum_dok, vrsta_dok;
+
+--    UPDATE DOKUMENT
+--    SET
+
+  ZaNiv ZaNiv_cursor % Rowtype;
+
+BEGIN
+
+  cDodatniTip := trim(PorganizacioniDeo.OrgDeoOsnPod( nOrgDeo , 'DODTIP'));
+--  If upper(cDodatniTip) = upper('VP2') or upper(cDodatniTip) = upper('VP3') Then
+  Dbms_Output.Put_line(   lpad('RBR.',4)||' god '||' '|| 'vrd'||' '||lpad('id otp',7)||' '||LPAD('DATUM UNOSA',19)
+                       || ' ' ||lpad('id niv',7));
+  Dbms_Output.Put_line(   lpad('=',4,'=')||' '|| '===='||' '|| '==='||' '||lpad('=',7,'=')||' '||lpad('=',19,'=')
+                       ||' '||lpad('=',7,'=')
+                      );
+     OPEN ZaNiv_cursor ;
+     LOOP
+     FETCH ZaNiv_cursor INTO ZaNiv ;
+     EXIT WHEN ZaNiv_cursor % NOTFOUND ;
+          nUk := nUk + 1;
+          cTrebaNivelacija := 'DA' ;
+          IF cTrebaNivelacija != 'DA' OR cPraviNiv != 'DA' Then
+             Dbms_Output.Put_line(         lpad(to_char(nUk),4)    ||' '|| to_char(ZaNiv.godina)
+                                   ||' '|| lpad(ZaNiv.Vrsta_dok,3) ||' '|| lpad(ZaNiv.Broj_dok,7)
+                                   ||' '|| LPAD(to_char(ZaNiv.DATUM_UNOSA,'DD.MM.YYYY HH24:MI:SS'),19)
+
+                                 );
+          End If;
+--          Dbms_Output.Put_line('RBR. '|| to_char(nUk)||' vr_dok '||ZaNiv.Vrsta_dok|| '  br otp '|| ZaNiv.Broj_dok);
+
+          IF cTrebaNivelacija = 'DA' And cPraviNiv = 'DA' Then
+             cBrojNivelacije  := To_Char( PSekvenca.NextVal( 'Broj_nivelacije_po_stavci', nGodinaDok ) );
+             cBrojNivelacije1 := To_Char( PSekvencaOrg.NextVal( 'Broj_nivelacije_po_stavci', nGodinaDok ,nOrgDeo) );
+             cVrstaNivelacije := '90';
+
+             Dbms_Output.Put_line(         lpad(to_char(nUk),4)    ||' '|| to_char(ZaNiv.godina)
+                                   ||' '|| lpad(ZaNiv.Vrsta_dok,3) ||' '|| lpad(ZaNiv.Broj_dok,7)
+                                   ||' '|| LPAD(to_char(ZaNiv.DATUM_UNOSA,'DD.MM.YYYY HH24:MI:SS'),19)
+                                   ||' '|| lpad(cBrojNivelacije,7)
+                                 );
+
+             Insert Into Dokument ( VRSTA_DOK, BROJ_DOK, GODINA, TIP_DOK, DATUM_DOK, DATUM_UNOSA, USER_ID, STATUS , ORG_DEO , BROJ_DOK1 )
+                         VALUES   ( cVrstaNivelacije, cBrojNivelacije, nGodinaDok, 99, ZaNiv.Datum_Dok, Sysdate, User, 1,
+                                    nOrgDeo, cBrojNivelacije1 );
+             Commit;
+
+ 	         Update Dokument
+	         Set Datum_Unosa = ZaNiv.Datum_Unosa - 0.00001
+	         Where Godina    = nGodinaDok
+	           And Vrsta_Dok = cVrstaNivelacije
+	           And Broj_Dok  = cBrojNivelacije ;
+
+             Commit;
+             -- veza OTPREMNICA (sifra=11) - NIVELACIJA CENE PO STAVCI ( sifra = 90 )
+             PVezniDok.DodajPar( ZaNiv.Vrsta_Dok             ,nGodinaDok, ZaNiv.Broj_Dok,
+                                 cVrstaNivelacije ,nGodinaDok, cBrojNivelacije );
+             Commit;
+          End If;
+     END LOOP;
+     CLOSE ZaNiv_cursor ;
+-- End If;
+END;
+"REM WORKSPACETAB3",Query20,,1
+SELECT * FROM RED8
+"REM WORKSPACETAB4","PROVERI SA NALOGOM",,49
+
+select D.GODINA, D.vrsta_dok, D.BROJ_DOK, TO_CHAR(D.DATUM_DOK,'dd.mm.yy') dat_otp
+     , SD.stavka, SD.proizvod, SD.cena, SD.faktor, SD.cena1
+     , PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+     , TRIM(PMapiranje.BerzanskiProizvodi(UPPER(substr('INVEJ',1,5)), SD.Proizvod)) BERZA
+
+     , d1.GODINA, d1.vrsta_dok, d1.BROJ_DOK, TO_CHAR(D1.DATUM_DOK,'dd.mm.yy') dat_nal, D1.DATUM_unosa dat_unosa_nal
+     , Sd1.stavka, Sd1.proizvod, Sd1.cena, Sd1.faktor, Sd1.cena1
+     , PProdajniCenovnik.Cena (sd1.proizvod , d1.Datum_Dok, 'YUD' , sd1.Faktor  ) PROD
+
+from DOKUMENT D, stavka_dok SD
+   , VEZNI_DOK VD
+   , DOKUMENT D1, stavka_dok SD1
+where
+      D.VRSTA_DOK = '11'
+  AND (D.BROJ_DOK, D.VRSTA_DOK, D.GODINA)
+		in  (select BROJ_DOK, VRSTA_DOK, GODINA
+			from
+				(
+				Select d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+				from dokument d
+				where godina = 2011
+				  and vrsta_Dok = 90
+				--  AND D.ORG_DEO BETWEEN 162 AND 162
+				  and (d.godina , d.vrsta_Dok, d.broj_dok ) not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok)
+
+				union
+
+				select d.broj_dok1,d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+				from dokument d, stavka_dok sd
+				where d.godina = 2011
+				  and d.vrsta_Dok in (11,12,13,31)
+				--  AND D.ORG_DEO BETWEEN 162 AND 162
+				  and (d.godina , d.vrsta_Dok, d.broj_dok )
+				       not in (Select godina , vrsta_Dok, broj_dok from vezni_Dok where za_vrsta_dok = 90)
+				  and sd.godina = d.godina and sd.vrsta_dok = d.vrsta_dok and sd.broj_dok = d.broj_dok
+				  and sd.cena <> sd.cena1
+
+				group by d.broj_dok1, d.BROJ_DOK, d.VRSTA_DOK, d.GODINA, d.datum_dok, d.datum_unosa , d.org_deo, d.user_id
+				)
+		    )
+	AND d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+	and SD.cena <> SD.cena1
+	AND d.godina = Vd.godina and d.vrsta_dok = Vd.vrsta_dok and d.broj_dok = Vd.broj_dok
+	AND ZA_VRSTA_DOK = 10
+	AND d1.godina = Vd.ZA_godina and d1.vrsta_dok = Vd.ZA_vrsta_dok and d1.broj_dok = Vd.ZA_broj_dok
+	AND d1.godina = sd1.godina and d1.vrsta_dok = sd1.vrsta_dok and d1.broj_dok = sd1.broj_dok
+	AND SD.PROIZVOD = SD1.PROIZVOD
+order by to_number(D.vrsta_dok), to_number(D.broj_dok), TO_NUMBER(SD.PROIZVOD)
+"REM WORKSPACETAB5",Dok_st_dok5.sql,,93
+select
+sd.ROWID , --pjedmere.naziv(sd.proizvod) jm,
+--pproizvod.naziv(sd.proizvod) ,
+--SD.BROJ_DOK,
+--D.org_deo, d.poslovnica,  d.vrsta_izjave,
+--sd.proizvod, SD.porez
+--,sd.cena,sd.cena1
+--,Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+--,sd.stavka
+--d.rowid, d.vrsta_izjave,d.org_deo, d.broj_dok1, sd.*
+--D.ROWID,-- D.*,
+--sd.jed_mere, p.jed_mere,
+--d.status, d.datum_dok, D.ORG_DEO, D.BROJ_DOK1,
+d.*,
+SD.*
+--,
+--PKurs.KursNaDan( 'EUR', D.DATUM_DOK, 'S') *144 KUR
+--D.DATUM_dOK, SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.KOLICINA,SD.CENA,SD.CENA1
+--, sd.cena * (1-sd.rabat/100)
+----,Obracunaj_JUS(sd.proizvod, sd.neto_kg, sd.proc_vlage, sd.proc_necistoce,nvl(sd.htl,0))
+----, (sd.kolicina * 2) z_t_osn, round((sd.kolicina * 2 * 1.18),2) z_t_uk
+--, OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, sd.faktor, sd.valuta,0) odgov
+----, PProdajniCenovnikGrKup.Cena ('GKNEU', sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) neu
+--, PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+--, Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+--,Kolicina * Faktor * 100 / Kolicina_Kontrolna jacina
+--d.tip_dok,pproizvod.naziv(sd.proizvod),--sd.*
+--sd.proizvod , pproizvod.naziv(sd.proizvod),sum (sd.kolicina * sd.faktor * sd.k_robe)
+--,d.status,sd.kolicina, sd.realizovano
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  -----------------------------
+  -- ostali uslovi
+  and '2011' = d.godina
+--  AND TIP_DOK = 11
+  AND D.ORG_DEO = 102
+  AND D.BROJ_DOK1 = 401
+  AND D.VRSTA_DOK = 3
+--and sd.faktor <> 1
+--  and  sd.proizvod in (
+--select sifra from proizvod
+--where sifra = 7551
+--)
+--  and (k_robe <>0 or d.vrsta_Dok = 80)
+--and (
+--          ( d.VRSTA_DOK = '3') --1351--
+----      or
+--          ( d.VRSTA_DOK = 11 And d.BROJ_DOK in('6098')) --1351--
+--
+--    )
+--and proizvod in (select proizvod from stavka_dok
+--where godina = 2010
+-- and vrsta_dok = 3
+-- and broj_dok = 21028)
+
+--  AND NVL ( SD.CENA , 0 ) <>  NVL ( SD.CENA1 , 0 )
+--
+--  and d.status >= 1
+--  and ( nvl(sd.cena1,0) <= 0 or nvl(sd.cena,0) <= 0 )
+--  and d.vrsta_dok  IN ( 1,26,45,46,
+--                        8,27,28,32 )
+--  and tip_dok = 23
+--  and sd.stavka = 1
+--  and d.broj_dok in (10)
+-- and d.broj_dok1 in (1595)
+--   AND SD.CENA <> 18
+-- PProdajniCenovnik.Cena( SD.Proizvod,D.Datum_Dok,SD.Valuta,SD.Faktor)
+--  and d.datum_dok <= to_date('01.02.2010','dd.mm.yyyy')
+--  and sd.proizvod = '4047'
+--AND D.VRSTA_DOK = 3
+--and d.status > 0
+--and sd.kolicina <> sd.realizovano
+--and k_robe <> 0
+--and nvl(sd.cena1,0) = 0
+--  and proizvod in ('10174','10175')
+--order by --to_number(sd.proizvod),
+----d.datum_dok ,
+--to_number(sd.broj_dok)
+--to_number(sd.proizvod)--,sd.stavka -- ,
+--
+----, d.broj_dok , stavka
+--ORDER BY TO_NUMBER(PROIZVOD),
+--         D.DATUM_UNOSA,
+--         TO_NUMBER(d.vrsta_dok),
+--         TO_NUMBER(d.BROJ_dok)
+--         --datum_dok--, stavka--
+--
+--and sd.stavka = 98
+order by d.datum_dok,d.datum_unosa;
+"REM WORKSPACETAB6",DOKUMENT.sql,,77
+SELECT   d.rowid,
+--d.datum_dok + d.valuta_placanja,
+D.*
+FROM
+dokument  d
+--VEZNI_DOK d
+--,
+--komentar d
+--FROM
+--stavka_Dok d --,
+--zavisni_troskovi d
+WHERE d.godina = 2010
+and d.org_deo = 104
+and (
+--          ( d.VRSTA_DOK = 2 and d.broj_dok = '1874') --1351--
+--      or
+          ( d.VRSTA_DOK = 3 ) --And d.BROJ_DOK in('6044')) --1351--
+--      or
+--          ( d.VRSTA_DOK = 85 And d.BROJ_DOK in('1879','1880')) --1351--
+--
+    )
+--and proizvod in (4047)
+--  and org_deo = 11
+
+--  and d.org_deo in (312)
+  and datum_dok <= to_date('01.02.2010','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+-- 21101 -- 18379
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(7627,7581)
+--order by stavka
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+
+--order by to_number(proizvod)
+"REM WORKSPACETAB7",Query25,,3
+select * from KURS
+where to_char(datum,'dd.mm.yyyy')='18.03.2011'
+  and val_ID = 'EUR'
+"REM WORKSPACETAB8",Query22,,55
+select
+
+d.VRSTA_DOK,d.BROJ_DOK,d.GODINA,d.TIP_DOK,d.DATUM_DOK,d.DATUM_UNOSA,d.USER_ID,d.PPARTNER,d.STATUS, d.org_deo, d.broj_dok1
+,sd.proizvod,sd.KOLICINA,sd.JED_MERE,sd.CENA,sd.VALUTA,sd.LOKACIJA,sd.cena1
+, case when d.vrsta_dok in (11,12,13,31) and sd.cena <> sd.cena1 then
+       'razl'
+--       (select vd.broj_dok from vezni_dok vd where vd.godina = d.godina and )
+  else
+       'isto'
+  end  razlika
+
+--sd.ROWID , --pjedmere.naziv(sd.proizvod) jm,
+----pproizvod.naziv(sd.proizvod) ,
+----SD.BROJ_DOK,
+----D.org_deo, d.poslovnica,  d.vrsta_izjave,
+----sd.proizvod, SD.porez
+----,sd.cena,sd.cena1
+----,Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+----,sd.stavka
+----d.rowid, d.vrsta_izjave,d.org_deo, d.broj_dok1, sd.*
+----D.ROWID,-- D.*,
+----sd.jed_mere, p.jed_mere,
+----d.status, d.datum_dok, D.ORG_DEO, D.BROJ_DOK1,
+--d.*,
+--SD.*
+----D.DATUM_dOK, SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.KOLICINA,SD.CENA,SD.CENA1
+----, sd.cena * (1-sd.rabat/100)
+------,Obracunaj_JUS(sd.proizvod, sd.neto_kg, sd.proc_vlage, sd.proc_necistoce,nvl(sd.htl,0))
+------, (sd.kolicina * 2) z_t_osn, round((sd.kolicina * 2 * 1.18),2) z_t_uk
+--, OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, sd.faktor, sd.valuta,0) odgov
+------, PProdajniCenovnikGrKup.Cena ('GKNEU', sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) neu
+----, PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+----, Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+----,Kolicina * Faktor * 100 / Kolicina_Kontrolna jacina
+----d.tip_dok,pproizvod.naziv(sd.proizvod),--sd.*
+----sd.proizvod , pproizvod.naziv(sd.proizvod),sum (sd.kolicina * sd.faktor * sd.k_robe)
+----,d.status,sd.kolicina, sd.realizovano
+from stavka_dok sd, dokument d , PROIZVOD P , GRUPA_PR  GPR
+
+--from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+
+  -----------------------------
+  -- ostali uslovi
+  and '2011' = d.godina
+--  AND TIP_DOK = 11
+  AND D.ORG_DEO = 161
+--and sd.faktor <> 1
+--  and proizvod = '6041'
+  and (k_robe <>0 or d.vrsta_Dok = 80)
+
+order by d.datum_dok,d.datum_unosa;
+"REM WORKSPACETAB9",Ovaj,,57
+select
+
+d.VRSTA_DOK,d.BROJ_DOK,d.GODINA,d.TIP_DOK,d.DATUM_DOK,d.DATUM_UNOSA,d.USER_ID,d.PPARTNER,d.STATUS, d.org_deo, d.broj_dok1
+,sd.proizvod,sd.KOLICINA,sd.JED_MERE,sd.CENA,sd.VALUTA,sd.LOKACIJA,sd.cena1
+,vd.*
+, case when d.vrsta_dok in (11,12,13,31) and sd.cena <> sd.cena1 then
+       (select vd.za_broj_dok from vezni_dok vd
+        where d.godina = vd.godina (+) and d.vrsta_dok = vd.vrsta_dok (+) and d.broj_dok = vd.broj_dok (+)
+          and za_vrsta_dok = 90)
+  else
+       '0'
+  end  autom_niv
+
+--sd.ROWID , --pjedmere.naziv(sd.proizvod) jm,
+----pproizvod.naziv(sd.proizvod) ,
+----SD.BROJ_DOK,
+----D.org_deo, d.poslovnica,  d.vrsta_izjave,
+----sd.proizvod, SD.porez
+----,sd.cena,sd.cena1
+----,Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+----,sd.stavka
+----d.rowid, d.vrsta_izjave,d.org_deo, d.broj_dok1, sd.*
+----D.ROWID,-- D.*,
+----sd.jed_mere, p.jed_mere,
+----d.status, d.datum_dok, D.ORG_DEO, D.BROJ_DOK1,
+--d.*,
+--SD.*
+----D.DATUM_dOK, SD.VRSTA_dOK, SD.BROJ_DOK, SD.PROIZVOD, SD.KOLICINA,SD.CENA,SD.CENA1
+----, sd.cena * (1-sd.rabat/100)
+------,Obracunaj_JUS(sd.proizvod, sd.neto_kg, sd.proc_vlage, sd.proc_necistoce,nvl(sd.htl,0))
+------, (sd.kolicina * 2) z_t_osn, round((sd.kolicina * 2 * 1.18),2) z_t_uk
+--, OdgovarajucaCena(D.Org_deo , Sd.proizvod , d.datum_dok, sd.faktor, sd.valuta,0) odgov
+------, PProdajniCenovnikGrKup.Cena ('GKNEU', sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) neu
+----, PProdajniCenovnik.Cena (sd.proizvod , d.Datum_Dok, 'YUD' , sd.Faktor  ) PROD
+----, Pporez.ProcenatPoreza(d.Poslovnica,sd.Proizvod,d.Datum_dok,d.Vrsta_izjave) treba_por
+----,Kolicina * Faktor * 100 / Kolicina_Kontrolna jacina
+----d.tip_dok,pproizvod.naziv(sd.proizvod),--sd.*
+----sd.proizvod , pproizvod.naziv(sd.proizvod),sum (sd.kolicina * sd.faktor * sd.k_robe)
+----,d.status,sd.kolicina, sd.realizovano
+from dokument d, stavka_dok sd, PROIZVOD P , GRUPA_PR  GPR
+   , (Select * from vezni_dok 
+      where za_vrsta_dok
+      not in ('10','14','41','6','2','24','85')
+      ) vd
+--   , (Select * from dokument where vrsta_Dok = 90) d1
+Where
+  -- veza tabela
+      d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND SD.PROIZVOD = P.SIFRA AND P.GRUPA_PROIZVODA=  GPR.ID
+  and d.godina = vd.godina (+) and d.vrsta_dok = vd.vrsta_dok (+) and d.broj_dok = vd.broj_dok (+)
+--  and vd.za_godina = d1.godina (+) and vd.vrsta_dok = d1.vrsta_dok (+) and vd.za_broj_dok = d1.broj_dok (+)
+  -----------------------------
+  -- ostali uslovi
+  and '2011' = d.godina
+  AND D.ORG_DEO = 161
+  and (k_robe <>0 or d.vrsta_Dok = 80)
+order by d.datum_dok,d.datum_unosa;
+"REM WORKSPACETAB10",Query23,,1
+select rowid, t.* from VR_TIP_DOK_GRUPISANJE t
+"REM WORKSPACETAB11",Query25,,1
+select rowid, t.* from VRSTA_DOK_TIP_DOK t
+"REM WORKSPACETAB12",Query22,,4
+select * from ZAVISNI_TROSKOVI_STAVKE
+where '2011' = godina
+and vrsta_Dok = 3
+and broj_dok  = 3116
+"REM WORKSPACETAB13",Query11,,32
+select * from vezni_dok
+where godina = 2012
+  and vrsta_dok = '11'
+  and broj_dok
+      in
+      (
+		'3478',
+		'3480',
+		'3481',
+		'3483',
+		'3484',
+		'3498',
+		'3499',
+		'3500',
+		'3501',
+		'3538',
+		'3540',
+		'3554',
+		'3555',
+		'3557',
+		'3558',
+		'3559',
+		'3584',
+		'3586',
+		'3589',
+		'3650',
+		'3653',
+		'3654',
+		'3808'
+      )
+
+and za_vrsta_dok = 90
+"REM WORKSPACETAB14",DOKUMENT.sql,,77
+SELECT   d.rowid,
+--d.datum_dok + d.valuta_placanja,
+D.*
+--, round(((d.kolicina * d.cena * (1-d.rabat/100) + nvl(z_troskovi,0)) / d.kolicina)*(100 + 2 ) / 100,2)
+FROM
+--dokument  d
+--VEZNI_DOK d
+--,
+--komentar d
+--FROM
+stavka_Dok d --,
+--vezni_dok d
+WHERE d.godina = 2011
+--  and d.org_deo = 161
+and (
+          ( d.VRSTA_DOK = 73 and d.broj_dok in('820')) --1351--742
+      or
+          ( d.VRSTA_DOK = 74 And d.BROJ_DOK in ('820')) --1351--
+
+    )
+--and za_vrsta_Dok = 10
+--and proizvod in (3338,4412,4413,4414,4418)
+--  and org_deo = 11
+
+--  and d.org_deo in (312)
+--  and datum_dok = to_date('04.09.2009','dd.mm.yyyy')
+----and stavka = 3
+----  and
+----      (
+------          ( d.vrsta_dok  in (73)  )
+----                   (d.vrsta_dok  = 11 and d.broj_dok in(14014,14015) )
+--       or
+--         (d.vrsta_dok  = 3 and d.tip_dok = 116)
+
+----d.vrsta_dok = 3
+----        or
+----          ( d.vrsta_dok  = 3 and broj_dok in (6666) )
+--       )
+----  and d.godina    = vd.godina and d.vrsta_dok = vd.vrsta_dok and d.broj_dok  = vd.broj_dok and vd.za_vrsta_dok = 14
+--And d.broJ_dok in (9021)
+--AND D.DATUM_VALUTE IS NULL
+-- ORG_DEO = 67
+--And d.broJ_dok1 in (507,508,524)
+--and to_char(datum_unosa, >
+-- 21101 -- 18379
+--and tip_dok = 222
+--and status = 0
+--and datum_dok > to_date('17.04.2008','dd.mm.yyyy')
+
+--order by to_number(broj_dok1)
+
+--union
+--
+--SELECT --D.BROJ_DOK
+--       d.rowid , --d.* , pposlovnipartner.naziv(d.ppartner)--max (to_number(broj_dok1))--d.ROWID ,
+--       d.* --spec_rabat , VRSTA_DOK , BROJ_DOK , org_deo , broj_dok1 ,DATUM_DOK , mesto_Isporuke, poslovnica
+--FROM DOKUMENT  d
+--WHERE d.GODINA       = 2007
+--  AND d.VRSTA_DOK    = 11
+--  And d.broj_dok     in ( 18360 )
+----  AND  d.broj_dok1     in (351,352,354,355,357)
+----  and  d.org_deo = 445
+--
+--AND PPARTNER = '1803'
+--AND PROIZVOD in(7627,7581)
+--order by stavka
+----order by to_number(broj_dok1)
+--order by to_number (proizvod )
+--                                                26.01.2008 19:16:55
+--                                                11.02.2008 16:17:21 PS
+
+-- za proizvod 4928 :  176.85921348314606741573033707865
+-- za proizvod 4929 :  156.83375218150087260034904013962
+-- za proizvod 4930 :  121.66043195063421323277339732602
+-- za proizvod 4931 :  121.66043195063421323277339732602
+--and d.cena <> d.cena1
+--order by d.vrsta_dok, to_number (proizvod )
+"REM WORKSPACETAB15",Query20,,1
+eXEC gENERISIsTANJEzALIHA(137,SYSDATE,TRUE)
+"REM WORKSPACETAB16",Query16,,5
+select ROWID, M.* from mapiranje@SUNCE m
+where
+-- modul = 'PLANIRANJE'
+ modul = 'MAGACIN'
+ AND '%'||UPPER(VRSTA)||'%' LIKE '%PRO%'

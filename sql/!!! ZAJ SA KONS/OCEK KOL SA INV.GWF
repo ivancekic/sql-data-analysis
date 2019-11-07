@@ -1,0 +1,537 @@
+"REM WORKSPACETAB0",Query1,,213
+select * from
+(
+select K.FIRMA_ID,k.firma,k.invej_sifra,k.fabricka_sifra,p.naziv,p.posebna_grupa,p.grupa_proizvoda,
+       k.kataloska_jm kat_jm,p.jed_mere jm,
+       --i.vp_cena,
+      (SELECT PC2.CENA VP_CENA
+       FROM PRODAJNI_CENOVNIK PC2
+       WHERE (PROIZVOD,DATUM) = (SELECT PROIZVOD, MAX(DATUM) FROM PRODAJNI_CENOVNIK WHERE PROIZVOD = PC2.PROIZVOD GROUP BY PROIZVOD)
+         And proizvod = k.invej_sifra
+       ) vp_cena,
+
+
+      (SELECT PC2.CENA VP_CENA
+       FROM PRODAJNI_CENOVNIK PC2
+       WHERE (PROIZVOD,DATUM) = (SELECT PROIZVOD, MAX(DATUM) FROM PRODAJNI_CENOVNIK WHERE PROIZVOD = PC2.PROIZVOD GROUP BY PROIZVOD)
+         And proizvod = k.invej_sifra
+       ) vp_cena_po_PROD_JM,
+
+
+       k.zadnja_nabavna_cena zad_nab_cena,
+       k.zadnji_nabavni_rabat zad_nab_rabat,
+
+       i.i_stanje/p.faktor_prodajne i_stanje,
+       i.i_rezervisana/p.faktor_prodajne i_rezervisana,
+       i.i_raspoloziva/p.faktor_prodajne i_raspoloziva,
+       i.i_ocekivana/p.faktor_prodajne i_ocekivana,
+
+
+       f.f_stanje,f.f_rezervisano,f.f_raspolozivo,
+
+       nvl(dodrez.rez_21_22/p.faktor_prodajne,0) rez_21_22,
+       nvl(dodrez.rez_21/p.faktor_prodajne,0) rez_21,
+       nvl(dodrez.rez_22/p.faktor_prodajne,0) rez_22
+
+,       nvl(dodrez.rez_21_22*p.faktor_planske,0) frez_21_22
+
+  from     (select * from (
+              SELECT
+                      case when upper(TRIM(SUBSTR(PP.NAZIV,1,5))) = 'ALBUS' then
+                                5
+                           when upper(TRIM(SUBSTR(PP.NAZIV,1,5))) = 'RUBIN' then
+                                3
+                           when upper(TRIM(SUBSTR(PP.NAZIV,1,5))) = 'VITAL' then
+                                4
+                           when upper(TRIM(SUBSTR(PP.NAZIV,1,5))) = 'MEDEL' then
+                                14
+                           when upper(TRIM(SUBSTR(PP.NAZIV,1,5))) = 'SUNCE' then
+                                11
+                           when upper(TRIM(SUBSTR(PP.NAZIV,1,5))) = 'RATAR' then
+                                12
+                      end firma_id
+                     ,TRIM(SUBSTR(PP.NAZIV,1,5)) FIRMA
+                     ,K.PROIZVOD INVEJ_SIFRA
+                     ,K.NABAVNA_SIFRA FABRICKA_SIFRA
+                     ,K.JM_CENA KATALOSKA_JM
+                     ,k.cena zadnja_nabavna_cena
+                     ,k.rabat zadnji_nabavni_rabat
+                FROM KATALOG K, POSLOVNI_PARTNER PP
+               WHERE K.DOBAVLJAC = PP.SIFRA
+                 AND K.DOBAVLJAC IN  (206,172,342,965,1226,138)
+
+
+            )) K
+
+           ,
+
+            (
+              --SELECT FIRMA,SIFRA,SUM(STANJE) F_STANJE,SUM(REZERVISANO) F_REZERVISANO,SUM(RASPOLOZIVO) F_RASPOLOZIVO FROM (
+             SELECT FIRMA_ID, FIRMA,SIFRA,round(SUM(STANJE),5) F_STANJE,round(SUM(REZERVISANO),5) F_REZERVISANO, round(SUM(RASPOLOZIVO),5) F_RASPOLOZIVO FROM (
+                    SELECT 3 firma_id, 'RUBIN' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@RUBIN FZ, PROIZVOD@RUBIN FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (48,88,68)
+
+                       UNION ALL
+
+--                    SELECT 4 firma_id, 'VITAL' FIRMA,FP.SIFRA,
+--                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+--                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+--                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+--                      FROM ZALIHE@VITAL FZ, PROIZVOD@VITAL FP
+--                     WHERE FZ.PROIZVOD = FP.SIFRA
+--                       AND ORG_DEO IN (34,73,169,158,91)
+
+                    SELECT 4 firma_id, 'VITAL' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@VITAL FZ, PROIZVOD@VITAL FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (34,73,158,91)
+                    UNION ALL
+                    SELECT 4 firma_id, 'VITAL' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@SUNCE FZ, PROIZVOD@SUNCE FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (664)
+
+                       UNION ALL
+
+                    SELECT 5 firma_id, 'ALBUS' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@ALBUS FZ, PROIZVOD@ALBUS FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (20)
+
+                       UNION ALL
+
+                    SELECT 14 firma_id, 'MEDEL' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@MEDELA FZ, PROIZVOD@MEDELA FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (40)
+
+                       UNION ALL
+
+                    SELECT 11 firma_id, 'SUNCE' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@SUNCE FZ, PROIZVOD@SUNCE FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (64)
+
+                       UNION ALL
+
+                    SELECT 12 firma_id, 'RATAR' FIRMA,FP.SIFRA,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE      STANJE,
+                           FZ.REZERVISANA/FP.FAKTOR_PRODAJNE REZERVISANO,
+                           FZ.STANJE/FP.FAKTOR_PRODAJNE - FZ.REZERVISANA/FP.FAKTOR_PRODAJNE RASPOLOZIVO
+                      FROM ZALIHE@RATAR FZ, PROIZVOD@RATAR FP
+                     WHERE FZ.PROIZVOD = FP.SIFRA
+                       AND ORG_DEO IN (101)
+                       )
+                       GROUP BY FIRMA_ID, FIRMA,SIFRA
+            ) f,
+
+            (
+                        select
+                        (case when invej.org_deo = 103 then 5
+                                   when invej.org_deo = 104 then 4
+                                   when invej.org_deo = 105 then 14
+                                   when invej.org_deo = 106 then 3
+                                   when invej.org_deo = 107 then 11
+                                   when invej.org_deo = 108 then 12
+                                   else -1
+                              end) firma_id,
+                      pc.*,invej.i_stanje,invej.i_rezervisana,invej.i_raspoloziva,invej.i_ocekivana from
+                        (SELECT PROIZVOD,TO_CHAR(PC2.DATUM,'DD.MM.YYYY') DATUM_CENE, PC2.CENA VP_CENA,PC2.JM_CENA JM_CENOVNIK
+                                  FROM PRODAJNI_CENOVNIK PC2
+                                 WHERE (PROIZVOD,DATUM) = (SELECT PROIZVOD, MAX(DATUM) FROM PRODAJNI_CENOVNIK WHERE PROIZVOD = PC2.PROIZVOD GROUP BY PROIZVOD))
+                                 PC,
+
+                        (
+                        select Org_deo, proizvod,sum(stanje) i_stanje, sum(rezervisana) i_rezervisana, sum(stanje-rezervisana) i_raspoloziva, sum(ocekivana) i_ocekivana
+                          from zalihe
+--                        where org_deo not in (155,123,124,125,126,127,128)
+                        where org_deo  in (103,104,105,106,107,108)
+                        group by Org_deo, proizvod
+                        ) invej
+
+                        where pc.proizvod = invej.proizvod
+                       order by  pc.proizvod
+
+            ) i ,
+
+            proizvod p
+
+          ,  (select (case when drez.org_deo = 103 then 5
+                           when drez.org_deo = 104 then 4
+                           when drez.org_deo = 105 then 14
+                           when drez.org_deo = 106 then 3
+                           when drez.org_deo = 107 then 11
+                           when drez.org_deo = 108 then 12
+                           else -1
+                      end) firma,
+                      strez.proizvod,
+                      sum(nvl((strez.kolicina-strez.realizovano) * strez.faktor,0)) rez_21_22,
+                      sum((case when drez.status = 21 then nvl((strez.kolicina-strez.realizovano) * strez.faktor,0) else 0 end)) rez_21,
+                      sum((case when drez.status = 22 then nvl((strez.kolicina-strez.realizovano) * strez.faktor,0) else 0 end)) rez_22
+                from dokument@invej drez, stavka_dok@invej strez
+               where drez.vrsta_dok = strez.vrsta_dok
+                 and drez.godina    = strez.godina
+                 and drez.broj_dok  = strez.broj_dok
+                 and drez.vrsta_dok = 10
+                 and drez.status in (21,22)
+               group by drez.org_deo,strez.proizvod
+            ) dodrez
+
+where k.firma          = f.firma (+)
+  and k.invej_sifra    = p.sifra
+  and k.fabricka_sifra = f.sifra (+)
+  and k.invej_sifra    = i.proizvod (+)
+  and k.firma_id       = i.firma_id (+)
+
+  and k.firma_id       = dodrez.firma (+)
+  and k.invej_sifra    = dodrez.proizvod (+)
+
+)
+
+
+--where invej_sifra = 4487
+
+ORDER BY FIRMA , POSEBNA_GRUPA , NAZIV
+"REM WORKSPACETAB1","ocek kol sa INV",,44
+-- za view
+Select Z.ORG_DEO 			INV_MAG
+     , OD.NAZIV				INV_NAZIV_MAG
+     , Z.PROIZVOD			INV_PRO
+     , P.NAZIV				INV_NAZIV_PRO
+     , Z.STANJE				INV_STANJE
+     , Z.REZERVISANA    	INV_REZ
+     , Z.U_KONTROLI			INV_KONTROLA
+     , Z.OCEKIVANA			INV_OCEK
+     , Z.STANJE_KONTROLNA   INV_ST_KONTROLNA
+     , OPF.FIRMA			FAB_ID
+     , OPF.SIFRA_U_INVEJU	FAB_PRT
+     , OPF.MAGACIN      	FAB_MAG
+     , OPF.SIFRA_FIRMA  	FAB_PRO
+
+from PROIZVOD P
+   , (SELECT * FROM ORGANIZACIONI_DEO
+      WHERE ID > 0 AND TIP = 'MAG' AND ID NOT IN (SELECT MAGACIN FROM PARTNER_MAGACIN_FLAG)
+      ) OD
+   , ZALIHE Z
+   , (Select INVEJ_SIFRA,JED_MERE_INVEJ,FIRMA,SIFRA_FIRMA,JED_MERE_FIRMA,MAGACIN,STATUS
+           , DECODE(FIRMA, 5,113
+                         , 4,114
+                         ,14,115
+                         , 3,116
+                         ,11,117
+                         ,12,118
+                            ,-9999999
+                   ) INV_MAG
+           , SIFRA_U_INVEJU
+      From firme f,OTPREMA_PROIZVODI_FIRME o
+      Where o.STATUS = 1
+        and f.id = o.firma
+      ) OPF
+WHERE
+--  AND
+      OD.ID = Z.ORG_DEO
+  AND OD.ID IN (113,114,115,116,117,118)
+  AND P.SIFRA = Z.PROIZVOD
+--  AND P.SIFRA = OPF.INVEJ_SIFRA
+  AND Z.PROIZVOD = OPF.INVEJ_SIFRA
+  AND Z.ORG_DEO  = OPF.INV_MAG
+  AND (Z.STANJE <> 0 OR Z.REZERVISANA <> 0 OR Z.U_KONTROLI <> 0 OR Z.OCEKIVANA <> 0 OR  Z.STANJE_KONTROLNA <> 0)
+ORDER BY OPF.FIRMA, TO_NUMBER(SIFRA)
+"REM WORKSPACETAB2","za view po datumima",,35
+Select opf.INVEJ_SIFRA 			INV_PRO
+     , p.naziv 					INV_PRO_NAZIV
+     , opf.FIRMA				INV_FIRMA
+     , opf.KRATAK_NAZIV			INV_FIRMA_NAZIV
+     , SIFRA_U_INVEJU         	sif_u_inv
+     , opf.SIFRA_FIRMA			FAB_PRO
+     , opf.MAGACIN 				FAB_MAG
+     , Z.*
+From
+(
+	Select INVEJ_SIFRA,JED_MERE_INVEJ,FIRMA,KRATAK_NAZIV,SIFRA_FIRMA,JED_MERE_FIRMA,MAGACIN,STATUS
+         , DECODE(FIRMA, 5,113
+                       , 4,114
+                       ,14,115
+                       , 3,116
+                       ,11,117
+                       ,12,118
+                          ,-9999999
+                 ) INV_MAG
+         , SIFRA_U_INVEJU
+      From firme f,OTPREMA_PROIZVODI_FIRME o
+      Where o.STATUS = 1
+        and f.id = o.firma
+ ) OPF
+--,
+--(SELECT * FROM ORGANIZACIONI_DEO
+--  WHERE Id in (113,114,115,116,117,118)
+--) OD
+, Proizvod p
+, (Select * from Zalihe Where Org_Deo in (113,114,115,116,117,118) ) z
+Where p.Sifra = OPF.Invej_sifra
+  and p.sifra = z.proizvod
+  and z.org_deo =  opf.INV_MAG
+Order by opf.INVEJ_SIFRA
+--opf.firma
+"REM WORKSPACETAB3",Query22,,1
+select * from firme
+"REM WORKSPACETAB4",ZALIHE_INVEJ_FABRIKE_NAB,,2
+select *
+from ZALIHE_INVEJ_FABRIKE_NAB
+"REM WORKSPACETAB5","ZA VIEW PO DATUMIMA",,99
+--select * from
+--(
+Select d.godina
+     , ps.dat_ps
+     , d.datum_dok
+     , D.ORG_DEO, SD.PROIZVOD
+     , SUM(CASE WHEN d.broj_dok !='-99966' and D.VRSTA_DOK != '2' and d.godina = ps.godina
+                     and d.datum_dok between ps.dat_ps and to_date('31.12'||d.godina,'dd.mm.yyyy') THEN
+                     case when D.Vrsta_Dok ||','||Tip_Dok in ('3,14','4,14') then
+                               round(KOLICINA*CENA*FAKTOR,5)
+                     else
+                               round(realizovano*CENA*FAKTOR,5)
+                     end
+           ELSE
+                0
+           END) STANJE
+     , SUM(CASE WHEN D.VRSTA_DOK = '2' THEN KOLICINA*CENA*FAKTOR ELSE 0 END) ocek
+     , sum ( case when d.vrsta_Dok in (9,10) and d.status in (1,3) And d.ppartner in (172,342,1226,206,965,138) then
+                  sd.kolicina * sd.faktor - sd.realizovano * sd.faktor
+             else
+                  0
+             end
+            ) rezerv
+From dokument d, stavka_dok sd
+	, (
+		Select GODINA,ORG_DEO,DAT_PS
+		from
+		(
+			Select d.godina, d.org_deo, max(d.datum_dok) dat_ps
+			From dokument d Where d.vrsta_dok = '21' and D.ORG_DEO IN (113,114,115,116,117,118) Group by d.godina, d.org_deo
+
+			union Select 2007 godina, 113 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+			union Select 2008 godina, 113 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+			union Select 2009 godina, 113 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+			union Select 2010 godina, 113 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+			union Select 2011 godina, 113 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+			union Select 2007 godina, 114 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+			union Select 2008 godina, 114 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+			union Select 2009 godina, 114 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+			union Select 2010 godina, 114 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+			union Select 2011 godina, 114 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+			union Select 2007 godina, 115 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+			union Select 2008 godina, 115 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+			union Select 2009 godina, 115 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+			union Select 2010 godina, 115 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+			union Select 2011 godina, 115 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+			union Select 2007 godina, 116 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+			union Select 2008 godina, 116 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+			union Select 2009 godina, 116 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+			union Select 2010 godina, 116 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+			union Select 2011 godina, 116 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+			union Select 2007 godina, 117 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+			union Select 2008 godina, 117 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+			union Select 2009 godina, 117 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+			union Select 2010 godina, 117 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+			union Select 2011 godina, 117 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+			union Select 2007 godina, 118 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+			union Select 2008 godina, 118 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+			union Select 2009 godina, 118 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+			union Select 2010 godina, 118 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+			union Select 2011 godina, 118 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+		)
+		Group by GODINA,ORG_DEO,DAT_PS
+		Order by org_deo, godina
+	  ) ps
+--, 	(
+--		Select INVEJ_SIFRA,JED_MERE_INVEJ,FIRMA,KRATAK_NAZIV,SIFRA_FIRMA,JED_MERE_FIRMA,MAGACIN,STATUS
+--	         , DECODE(FIRMA, 5,113
+--	                       , 4,114
+--	                       ,14,115
+--	                       , 3,116
+--	                       ,11,117
+--	                       ,12,118
+--	                          ,-9999999
+--	                 ) INV_MAG
+--	         , SIFRA_U_INVEJU
+--	      From firme f,OTPREMA_PROIZVODI_FIRME o
+--	      Where o.STATUS = 1
+--	        and f.id = o.firma
+--	 ) OPF
+Where
+      D.BROJ_DOK <> '-01111' AND D.VRSTA_DOK <> '-9' AND D.GODINA > 0
+  AND d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+  AND D.STATUS > 0
+  AND (SD.K_ROBE <> 0 OR D.VRSTA_DOK = '2')
+  AND D.ORG_DEO IN (113,114,115,116,117,118)
+  And d.org_deo = ps.org_deo
+  And d.godina  = ps.godina
+--  And d.org_deo = opf.inv_mag
+--  and sd.proizvod = opf.invej_sifra
+GROUP BY d.godina, ps.dat_ps, d.datum_dok, D.ORG_DEO, SD.PROIZVOD
+--) d
+--where   STANJE_OLD<>STANJE
+order by d.godina, d.datum_dok, D.ORG_DEO, SD.PROIZVOD
+"REM WORKSPACETAB6","ZA VIEW PO DATUMIMA ver 1",,104
+select GODINA,DAT_PS,DATUM_DOK,ORG_DEO,PROIZVOD,STANJE,OCEK,REZERV,INV_FIR
+     , fab_mag, fab_pro
+from
+(
+	Select d.godina
+	     , ps.dat_ps
+	     , d.datum_dok
+	     , D.ORG_DEO, SD.PROIZVOD
+	     , SUM(CASE WHEN d.broj_dok !='-99966' and D.VRSTA_DOK not in ( '2', '9', '10') and d.godina = ps.godina
+	                     and d.datum_dok between ps.dat_ps and to_date('31.12'||d.godina,'dd.mm.yyyy') THEN
+	                     case when D.Vrsta_Dok ||','||Tip_Dok in ('3,14','4,14') then
+	                               round(KOLICINA*CENA*FAKTOR,5)
+	                     else
+	                               round(realizovano*CENA*FAKTOR,5)
+	                     end
+	           ELSE
+	                0
+	           END) STANJE
+	     , SUM(CASE WHEN D.VRSTA_DOK = '2' THEN KOLICINA*CENA*FAKTOR ELSE 0 END) ocek
+	     , sum ( case when d.vrsta_Dok in (9,10) and d.status in (1,3) And d.ppartner in (172,342,1226,206,965,138) then
+	                  sd.kolicina * sd.faktor - sd.realizovano * sd.faktor
+	             else
+	                  0
+	             end
+	            ) rezerv
+
+		         , DECODE(D.ORG_DEO, 113,  5
+		                           , 114,  4
+		                           , 115, 14
+		                           , 116,  3
+		                           , 117, 11
+		                           , 118, 12
+		                                , -9999999
+		                 ) INV_FIR
+
+	From dokument d, stavka_dok sd
+		, (
+			Select GODINA,ORG_DEO,DAT_PS
+			from
+			(
+				Select d.godina, d.org_deo, max(d.datum_dok) dat_ps
+				From dokument d Where d.vrsta_dok = '21' and D.ORG_DEO IN (113,114,115,116,117,118) Group by d.godina, d.org_deo
+
+				union Select 2007 godina, 113 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+				union Select 2008 godina, 113 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+				union Select 2009 godina, 113 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+				union Select 2010 godina, 113 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+				union Select 2011 godina, 113 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+				union Select 2007 godina, 114 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+				union Select 2008 godina, 114 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+				union Select 2009 godina, 114 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+				union Select 2010 godina, 114 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+				union Select 2011 godina, 114 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+				union Select 2007 godina, 115 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+				union Select 2008 godina, 115 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+				union Select 2009 godina, 115 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+				union Select 2010 godina, 115 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+				union Select 2011 godina, 115 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+				union Select 2007 godina, 116 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+				union Select 2008 godina, 116 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+				union Select 2009 godina, 116 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+				union Select 2010 godina, 116 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+				union Select 2011 godina, 116 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+				union Select 2007 godina, 117 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+				union Select 2008 godina, 117 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+				union Select 2009 godina, 117 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+				union Select 2010 godina, 117 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+				union Select 2011 godina, 117 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+
+				union Select 2007 godina, 118 org_deo, to_date('01.01.2007','dd.mm.yyyy') dat_ps From dual
+				union Select 2008 godina, 118 org_deo, to_date('01.01.2008','dd.mm.yyyy') dat_ps From dual
+				union Select 2009 godina, 118 org_deo, to_date('01.01.2009','dd.mm.yyyy') dat_ps From dual
+				union Select 2010 godina, 118 org_deo, to_date('01.01.2010','dd.mm.yyyy') dat_ps From dual
+				union Select 2011 godina, 118 org_deo, to_date('01.01.2011','dd.mm.yyyy') dat_ps From dual
+			)
+			Group by GODINA,ORG_DEO,DAT_PS
+			Order by org_deo, godina
+		  ) ps
+	Where
+	      D.BROJ_DOK <> '-01111' AND D.VRSTA_DOK <> '-9' AND D.GODINA > 0
+	  AND d.godina = sd.godina and d.vrsta_dok = sd.vrsta_dok and d.broj_dok = sd.broj_dok
+	  AND D.STATUS > 0
+	  AND (SD.K_ROBE <> 0 OR D.VRSTA_DOK in ('2','9','10') )
+	  AND D.ORG_DEO IN (113,114,115,116,117,118)
+	  And d.org_deo = ps.org_deo
+	  And d.godina  = ps.godina
+
+	GROUP BY d.godina, ps.dat_ps, d.datum_dok, D.ORG_DEO, SD.PROIZVOD
+) d
+, 	(
+		Select INVEJ_SIFRA,JED_MERE_INVEJ,FIRMA,KRATAK_NAZIV,SIFRA_FIRMA fab_pro,JED_MERE_FIRMA,MAGACIN fab_mag,STATUS
+	         , SIFRA_U_INVEJU
+	      From firme f,OTPREMA_PROIZVODI_FIRME o
+	      Where o.STATUS = 1
+	        and f.id = o.firma
+	 ) OPF
+Where d.inv_fir = opf.firma
+  And d.proizvod = opf.invej_sifra
+
+order by d.godina, d.datum_dok, D.ORG_DEO, D.PROIZVOD
+"REM WORKSPACETAB7","OTP FAB RAZL FIRME",,6
+select FIRMA, f.id, KRATAK_NAZIV, SIFRA_U_INVEJU
+from OTPREMA_PROIZVODI_FIRME OPF, FIRME F
+WHERE OPF.STATUS = 1
+  AND F.ID = OPF.FIRMA
+GROUP BY FIRMA, f.id, KRATAK_NAZIV
+ORDER BY FIRMA, KRATAK_NAZIV
+"REM WORKSPACETAB8","OTP FAB ROBA",,4
+select OPF.*
+from OTPREMA_PROIZVODI_FIRME OPF
+WHERE OPF.STATUS = 1
+ORDER BY FIRMA
+"REM WORKSPACETAB9",Rezervisane_kolicine.sql,,19
+select sd.proizvod, d.status, d.datum_dok, d.broj_dok, d.vrsta_dok, d.user_id, sd.kolicina, sd.jed_mere, sd.realizovano , sd.jed_mere sklad_jm
+from stavka_dok sd , dokument d , proizvod p
+where d.GODINA=2012
+and d.vrsta_dok in (9,10)
+and d.status in (1,3)
+and sd.proizvod = p.sifra
+--and sd.proizvod in ( select sd.proizvod
+--                     from stavka_dok sd
+--                     Where d.godina = 2010
+--                       AND d.vrsta_DOK = 10
+--                       and d.broj_dok in (3764)
+--                    )
+and d.org_Deo = 104
+and sd.kolicina != sd.realizovano
+and sd.godina    = d.godina
+and sd.vrsta_dok = d.vrsta_dok
+and sd.broj_dok  = d.broj_dok
+and proizvod in (4094)
+order by datum_dok--to_number(d.broj_dok), to_number(sd.proizvod)
